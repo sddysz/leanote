@@ -3,9 +3,9 @@ package service
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/leanote/leanote/app/db"
-	"github.com/leanote/leanote/app/info"
-	. "github.com/leanote/leanote/app/lea"
+	"github.com/sddysz/leanote/app/db"
+	"github.com/sddysz/leanote/app/info"
+	. "github.com/sddysz/leanote/app/lea"
 	"github.com/revel/revel"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"

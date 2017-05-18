@@ -2,12 +2,12 @@ package service
 
 import (
 	"gopkg.in/mgo.v2/bson"
-	//	"github.com/leanote/leanote/app/db"
-	"github.com/leanote/leanote/app/info"
+	//	"github.com/sddysz/leanote/app/db"
+	"github.com/sddysz/leanote/app/info"
 	//	"github.com/revel/revel"
 	"errors"
 	"fmt"
-	. "github.com/leanote/leanote/app/lea"
+	. "github.com/sddysz/leanote/app/lea"
 	"strconv"
 	"strings"
 )

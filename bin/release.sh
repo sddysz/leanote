@@ -15,7 +15,7 @@ V="v2.4"
 # 1. 先build 成 3个平台, 2种bit = 6种
 ##=================================
 
-# cd /Documents/Go/package2/src/github.com/leanote/leanote/bin
+# cd /Documents/Go/package2/src/github.com/sddysz/leanote/bin
 # GOOS=darwin GOARCH=amd64 go build -o leanote-darwin-amd64 ../app/tmp
 
 cd $SP
@@ -96,7 +96,7 @@ rm $tmp/leanote/public/config.codekit
 
 # make link
 # cd $tmp/leanote/bin
-# ln -s ../../../../ ./src/github.com/leanote/leanote
+# ln -s ../../../../ ./src/github.com/sddysz/leanote
 
 # archieve
 # << 'BLOCK

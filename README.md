@@ -33,12 +33,12 @@ We have been using the popular note-taking software/service `Evernote` as our kn
 * Everybody loves *markdown*, however `Evernote` simply wouldn't add it despite of years' of requests from users. So we will do the favor and bring a *markdown* enabled editor to you, guess what, it is also rendered in real-time!
 * If you a developer and miss the `Vim` or `Emacs` ways of writing, we offer you the choice of `Vim` and `Emacs` editting modes. Equipped   with *markdown* syntax for text formatting, you will never need to touch your mouse while writing.
 * We love managing knowledge and thoughts as much as sharing them, so everybody has their own note account (`Evernote`, `Onenote`, `Google doc`, `Wiz note` etc.) and social media account (`Facebook`, `Wordpress`, blogs, etc.). But why can’t those two be one? Leanote makes this first step to bridge the private note-taking and public knowledge sharing seamlessly.
-* A complete and all-platform (sorry Windows phone) covering software suite: that includes Leanote Web & Server (this repository), [Desktop app](https://github.com/leanote/desktop-app), [iOS](https://github.com/leanote/leanote-ios), [Android](https://github.com/leanote/leanote-android). And they are all open source!
+* A complete and all-platform (sorry Windows phone) covering software suite: that includes Leanote Web & Server (this repository), [Desktop app](https://github.com/sddysz/desktop-app), [iOS](https://github.com/sddysz/leanote-ios), [Android](https://github.com/sddysz/leanote-android). And they are all open source!
 * ......
 
 ## 3. How to get Leanote
 
-The Leanote software suite contains: Leanote Web & Server (this repository), [Desktop app](https://github.com/leanote/desktop-app), [iOS](https://github.com/leanote/leanote-ios), [Android](https://github.com/leanote/leanote-android). 
+The Leanote software suite contains: Leanote Web & Server (this repository), [Desktop app](https://github.com/sddysz/desktop-app), [iOS](https://github.com/sddysz/leanote-ios), [Android](https://github.com/sddysz/leanote-android). 
 
 Interested in our product and want to try it out from your web browser? Welcome to sign up on https://leanote.com. 
 
@@ -47,20 +47,20 @@ Feeling suspicious about how those note-taking companies treat your personal dat
 More information about how to install Leanote please see:
 
 * Leanote binary installation tutorial:
-    * [Windows](https://github.com/leanote/leanote/wiki/leanote-source-installation-on-Windows-(En))
-    * [Mac and Linux](https://github.com/leanote/leanote/wiki/leanote-binary-installation-on-Mac-and-Linux-(En))
+    * [Windows](https://github.com/sddysz/leanote/wiki/leanote-source-installation-on-Windows-(En))
+    * [Mac and Linux](https://github.com/sddysz/leanote/wiki/leanote-binary-installation-on-Mac-and-Linux-(En))
 * Leanote source installation tutorial:
-    * [Windows](https://github.com/leanote/leanote/wiki/leanote-source-installation-on-Windows-(En))
-    * [Mac and Linux](https://github.com/leanote/leanote/wiki/Leanote-source-installation-on-Mac-and-Linux-(En))
+    * [Windows](https://github.com/sddysz/leanote/wiki/leanote-source-installation-on-Windows-(En))
+    * [Mac and Linux](https://github.com/sddysz/leanote/wiki/Leanote-source-installation-on-Mac-and-Linux-(En))
 
 ## 4. Documentation
 
-Please see [wiki](https://github.com/leanote/leanote/wiki) for detailed instruction on how to install Leanote on various platforms, trouble shooting and configuration explanations.
+Please see [wiki](https://github.com/sddysz/leanote/wiki) for detailed instruction on how to install Leanote on various platforms, trouble shooting and configuration explanations.
 
 
 ## 5. How to develop Leanote
 
-If you are a developer yourself and feel like to build on top of Leanote, please refer to [How-to-develop-leanote](https://github.com/leanote/leanote/wiki/How-to-develop-leanote-%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91leanote).
+If you are a developer yourself and feel like to build on top of Leanote, please refer to [How-to-develop-leanote](https://github.com/sddysz/leanote/wiki/How-to-develop-leanote-%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91leanote).
 
 
 ## 6. Contributions
@@ -68,14 +68,14 @@ If you are a developer yourself and feel like to build on top of Leanote, please
 Like or dislike Leanote, please leave your comments and suggestions to help us improve it.
 If you encounter any issue, we suggest you first do a search in the issues section to see whether a solution already exists, or open up a new one otherwise.
 
-We’d like to acknowledge the contributions made by our [developers and contributors](https://github.com/leanote/leanote/graphs/contributors) to
+We’d like to acknowledge the contributions made by our [developers and contributors](https://github.com/sddysz/leanote/graphs/contributors) to
 this project. Leanote won’t exist without your hard work. Your help is much appreciated.
 
 ## 7. Join us
 
-Please feel free to fork this repository and contribute back using [pull requests](https://github.com/leanote/leanote/pulls).
+Please feel free to fork this repository and contribute back using [pull requests](https://github.com/sddysz/leanote/pulls).
 
-If you find any problems or have any good ideas, feature requests, please submit here [issues](https://github.com/leanote/leanote/issues).
+If you find any problems or have any good ideas, feature requests, please submit here [issues](https://github.com/sddysz/leanote/issues).
 
 
 ## 8. Donation
@@ -85,9 +85,9 @@ We acknowledge the donations make by all the [donators](http://leanote.leanote.c
 
 ## 9. Related projects
 
-* [Leanote Desktop App](https://github.com/leanote/desktop-app), [Download](http://app.leanote.com)
-* [Leanote iOS](https://github.com/leanote/leanote-ios), [Download From App Store](https://itunes.apple.com/en/app/leanote/id1022302858?mt=8)
-* [Leanote Android](https://github.com/leanote/leanote-android), development phase
+* [Leanote Desktop App](https://github.com/sddysz/desktop-app), [Download](http://app.leanote.com)
+* [Leanote iOS](https://github.com/sddysz/leanote-ios), [Download From App Store](https://itunes.apple.com/en/app/leanote/id1022302858?mt=8)
+* [Leanote Android](https://github.com/sddysz/leanote-android), development phase
 
 You are welcome to join us.
 
@@ -142,29 +142,29 @@ Leanote云笔记产品包括: Leanote Web & Server(即本仓库), 桌面客户�
 这里详细整理了Leanote二进版和Leanote开发版的安装教程, 请移步至:
 
 * Leanote二进制详细安装教程:
-    * [Windows](https://github.com/leanote/leanote/wiki/Leanote%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%89%88%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B---Windows)
-    * [Mac, Linux](https://github.com/leanote/leanote/wiki/leanote%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%89%88%E8%AF%A6%E7%BB%86%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B)
+    * [Windows](https://github.com/sddysz/leanote/wiki/Leanote%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%89%88%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B---Windows)
+    * [Mac, Linux](https://github.com/sddysz/leanote/wiki/leanote%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%89%88%E8%AF%A6%E7%BB%86%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B)
 * Leanote源码详细安装教程:
-    * [Windows](https://github.com/leanote/leanote/wiki/Leanote-%E6%BA%90%E7%A0%81%E7%89%88%E8%AF%A6%E7%BB%86%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B----Windows)
-    * [Mac, Linux](https://github.com/leanote/leanote/wiki/leanote%E5%BC%80%E5%8F%91%E7%89%88%E8%AF%A6%E7%BB%86%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B)
+    * [Windows](https://github.com/sddysz/leanote/wiki/Leanote-%E6%BA%90%E7%A0%81%E7%89%88%E8%AF%A6%E7%BB%86%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B----Windows)
+    * [Mac, Linux](https://github.com/sddysz/leanote/wiki/leanote%E5%BC%80%E5%8F%91%E7%89%88%E8%AF%A6%E7%BB%86%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B)
 
 ## 4. 相关文档
 
-更多详细的安装说明、问题处理和配置说明文档，请查看 [wiki](https://github.com/leanote/leanote/wiki)。
+更多详细的安装说明、问题处理和配置说明文档，请查看 [wiki](https://github.com/sddysz/leanote/wiki)。
 
 ## 5. 如何对Leanote进行二次开发
 
-如果您有兴趣基于Leanote二次开发，请查看 [How-to-develop-Leanote](https://github.com/leanote/leanote/wiki/How-to-develop-leanote-%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91leanote)。
+如果您有兴趣基于Leanote二次开发，请查看 [How-to-develop-Leanote](https://github.com/sddysz/leanote/wiki/How-to-develop-leanote-%E5%A6%82%E4%BD%95%E5%BC%80%E5%8F%91leanote)。
 
 ## 6. 贡献者
 
-在此对向Leanote贡献力量的[贡献者们](https://github.com/leanote/leanote/graphs/contributors) 表示感谢。Leanote因有你们而更完美!
+在此对向Leanote贡献力量的[贡献者们](https://github.com/sddysz/leanote/graphs/contributors) 表示感谢。Leanote因有你们而更完美!
 
 ## 7. 加入我们
 
-欢迎提交[pull requests](https://github.com/leanote/leanote/pulls) 到Leanote。
+欢迎提交[pull requests](https://github.com/sddysz/leanote/pulls) 到Leanote。
 
-有任何问题或建议, 请先搜索[issue](https://github.com/leanote/leanote/issues)区是否已经有解决方法。如果没有，欢迎提交新issue。
+有任何问题或建议, 请先搜索[issue](https://github.com/sddysz/leanote/issues)区是否已经有解决方法。如果没有，欢迎提交新issue。
 
 Leanote还有很多问题, 如果你喜欢它, 欢迎加入我们一起完善Leanote。
 
@@ -175,9 +175,9 @@ Leanote还有很多问题, 如果你喜欢它, 欢迎加入我们一起完善Lea
 感谢[这些捐赠者](http://leanote.leanote.com/post/leanote-donation-list), 谢谢你们的鼓励, Leanote会一直坚持!
 
 ## 9. 其它相关项目
-* [Leanote Desktop App](https://github.com/leanote/desktop-app), [下载地址](http://app.leanote.com)
-* [Leanote iOS](https://github.com/leanote/leanote-ios), [从App Store下载](https://itunes.apple.com/zn/app/leanote/id1022302858?mt=8)
-* [Leanote Android](https://github.com/leanote/leanote-android), 开发阶段
+* [Leanote Desktop App](https://github.com/sddysz/desktop-app), [下载地址](http://app.leanote.com)
+* [Leanote iOS](https://github.com/sddysz/leanote-ios), [从App Store下载](https://itunes.apple.com/zn/app/leanote/id1022302858?mt=8)
+* [Leanote Android](https://github.com/sddysz/leanote-android), 开发阶段
 
 欢迎加入我们!
 

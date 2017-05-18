@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/leanote/leanote/app/info"
-	"github.com/leanote/leanote/app/lea/i18n"
+	"github.com/sddysz/leanote/app/info"
+	"github.com/sddysz/leanote/app/lea/i18n"
 	"github.com/revel/revel"
 	"gopkg.in/mgo.v2/bson"
-	//	. "github.com/leanote/leanote/app/lea"
+	//	. "github.com/sddysz/leanote/app/lea"
 	//	"io/ioutil"
 	//	"fmt"
 	"bytes"

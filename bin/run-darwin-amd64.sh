@@ -3,16 +3,16 @@ SCRIPTPATH=$(cd "$(dirname "$0")"; pwd)
 
 # set link
 
-path="$SCRIPTPATH/src/github.com/leanote"
+path="$SCRIPTPATH/src/github.com/sddysz"
 if [ ! -d "$path" ]; then
 	mkdir -p "$path"
 fi
-rm -rf $SCRIPTPATH/src/github.com/leanote/leanote # 先删除
-ln -s ../../../../ $SCRIPTPATH/src/github.com/leanote/leanote
+rm -rf $SCRIPTPATH/src/github.com/sddysz/leanote # 先删除
+ln -s ../../../../ $SCRIPTPATH/src/github.com/sddysz/leanote
 
 # set GOPATH
 export GOPATH=$SCRIPTPATH
 
 script="$SCRIPTPATH/leanote-darwin-amd64"
 chmod 777 $script
-$script -importPath github.com/leanote/leanote
+$script -importPath github.com/sddysz/leanote
