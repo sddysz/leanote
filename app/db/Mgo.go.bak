@@ -2,11 +2,10 @@ package db
 
 import (
 	"fmt"
+
 	. "github.com/sddysz/leanote/app/lea"
-	"github.com/revel/revel"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 )
 
 // Init mgo and the common DAO
@@ -58,7 +57,7 @@ var Themes *mgo.Collection
 var Sessions *mgo.Collection
 
 // 初始化时连接数据库
-func Init(url, dbname string) {
+/*func Init(url, dbname string) {
 	ok := true
 	config := revel.Config
 	if url == "" {
@@ -166,7 +165,7 @@ func Init(url, dbname string) {
 
 	// session
 	Sessions = Session.DB(dbname).C("sessions")
-}
+}*/
 
 func close() {
 	Session.Close()
