@@ -1,12 +1,14 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
-	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/revel/revel"
+	"github.com/sddysz/leanote/app/db"
+	"github.com/sddysz/leanote/app/info"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type UserService struct {
@@ -15,29 +17,32 @@ type UserService struct {
 // 自增Usn
 // 每次notebook,note添加, 修改, 删除, 都要修改
 func (this *UserService) IncrUsn(userId string) int {
+
 	user := info.User{}
-	query := bson.M{"_id": bson.ObjectIdHex(userId)}
-	db.GetByQWithFields(db.Users, query, []string{"Usn"}, &user)
+	has, err := Engine.Id(userId).Get(user)
 	usn := user.Usn
-	usn += 1
+	usn++
 	Log("inc Usn")
-	db.UpdateByQField(db.Users, query, "Usn", usn)
+	has, err := Engine.Id(Id).Cols("usn").Update(user)
+	if err != nil {
+		revel.WARN.Println(has)
+		revel.WARN.Printf("错误: %v", err)
+		return false
+	}
 	return usn
-	//	return db.Update(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId)}, bson.M{"$inc": bson.M{"ReadNum": 1}})
+	//	return db.Update(db.Notes, bson.M{"_id": int64Hex(noteId)}, bson.M{"$inc": bson.M{"ReadNum": 1}})
 }
 
 func (this *UserService) GetUsn(userId string) int {
 	user := info.User{}
-	query := bson.M{"_id": bson.ObjectIdHex(userId)}
-	db.GetByQWithFields(db.Users, query, []string{"Usn"}, &user)
+	user := new(User)
+	has, err := Engine.Id(userId).Get(user)
 	return user.Usn
 }
 
 // 添加用户
 func (this *UserService) AddUser(user info.User) bool {
-	if user.UserId == "" {
-		user.UserId = bson.NewObjectId()
-	}
+
 	user.CreatedTime = time.Now()
 
 	if user.Email != "" {
@@ -50,29 +55,29 @@ func (this *UserService) AddUser(user info.User) bool {
 			// emailService.SendEmail("life@leanote.com", "新增用户", "{header}用户名"+user.Email+"{footer}")
 		}()
 	}
-
-	return db.Insert(db.Users, user)
+	affected, err := Engine.Insert(user)
+	return err == nil
 }
 
 // 通过email得到userId
 func (this *UserService) GetUserId(email string) string {
 	email = strings.ToLower(email)
 	user := info.User{}
-	db.GetByQ(db.Users, bson.M{"Email": email}, &user)
-	return user.UserId.Hex()
+	engine.Where("email=?", email).Get(&user)
+	return user.UserId
 }
 
 // 得到用户名
 func (this *UserService) GetUsername(userId string) string {
 	user := info.User{}
-	db.GetByQWithFields(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)}, []string{"Username"}, &user)
+	engine.Id(userId).Get(user)
 	return user.Username
 }
 
 // 得到用户名
-func (this *UserService) GetUsernameById(userId bson.ObjectId) string {
+func (this *UserService) GetUsernameById(userId int64) string {
 	user := info.User{}
-	db.GetByQWithFields(db.Users, bson.M{"_id": userId}, []string{"Username"}, &user)
+	engine.Id(userId).Get(user)
 	return user.Username
 }
 
@@ -86,12 +91,15 @@ func (this *UserService) IsExistsUser(email string) bool {
 
 // 是否存在该用户 username
 func (this *UserService) IsExistsUserByUsername(username string) bool {
-	return db.Count(db.Users, bson.M{"Username": username}) >= 1
+	user := info.User{}
+	total, err := engine.Where("username =?", username).Count(user)
+	return total >= 1
 }
 
 // 得到用户信息, userId, username, email
 func (this *UserService) GetUserInfoByAny(idEmailUsername string) info.User {
-	if IsObjectId(idEmailUsername) {
+	b, error := strconv.Atoi(idEmailUsername)
+	if error == nil {
 		return this.GetUserInfo(idEmailUsername)
 	}
 
@@ -117,7 +125,7 @@ func (this *UserService) setUserLogo(user *info.User) {
 // 仅得到用户
 func (this *UserService) GetUser(userId string) info.User {
 	user := info.User{}
-	db.Get(db.Users, userId, &user)
+	engine.Id(userId).Get(&user)
 	return user
 }
 
@@ -133,7 +141,7 @@ func (this *UserService) GetUserInfo(userId string) info.User {
 // 得到用户信息 email
 func (this *UserService) GetUserInfoByEmail(email string) info.User {
 	user := info.User{}
-	db.GetByQ(db.Users, bson.M{"Email": email}, &user)
+	engine.Where("email = ?", email).Get(&user)
 	// Logo路径问题, 有些有http: 有些没有
 	this.setUserLogo(&user)
 	return user
@@ -143,7 +151,7 @@ func (this *UserService) GetUserInfoByEmail(email string) info.User {
 func (this *UserService) GetUserInfoByUsername(username string) info.User {
 	user := info.User{}
 	username = strings.ToLower(username)
-	db.GetByQ(db.Users, bson.M{"Username": username}, &user)
+	engine.Where("email = ?", username).Get(&user)
 	// Logo路径问题, 有些有http: 有些没有
 	this.setUserLogo(&user)
 	return user
@@ -151,27 +159,27 @@ func (this *UserService) GetUserInfoByUsername(username string) info.User {
 
 func (this *UserService) GetUserInfoByThirdUserId(thirdUserId string) info.User {
 	user := info.User{}
-	db.GetByQ(db.Users, bson.M{"ThirdUserId": thirdUserId}, &user)
+	engine.Where("thirdUserId = ?", thirdUserId).Get(&user)
 	this.setUserLogo(&user)
 	return user
 }
-func (this *UserService) ListUserInfosByUserIds(userIds []bson.ObjectId) []info.User {
+func (this *UserService) ListUserInfosByUserIds(userIds []int64) []info.User {
 	users := []info.User{}
-	db.ListByQ(db.Users, bson.M{"_id": bson.M{"$in": userIds}}, &users)
+	engine.In("userId", userIds).Find(&user)
 	return users
 }
 func (this *UserService) ListUserInfosByEmails(emails []string) []info.User {
 	users := []info.User{}
-	db.ListByQ(db.Users, bson.M{"Email": bson.M{"$in": emails}}, &users)
+	engine.In("email ?", emails).Find(&user)
 	return users
 }
 
 // 用户信息即可
-func (this *UserService) MapUserInfoByUserIds(userIds []bson.ObjectId) map[bson.ObjectId]info.User {
+func (this *UserService) MapUserInfoByUserIds(userIds []int64) map[int64]info.User {
 	users := []info.User{}
-	db.ListByQ(db.Users, bson.M{"_id": bson.M{"$in": userIds}}, &users)
+	engine.In("userId", userIds).Find(&user)
 
-	userMap := make(map[bson.ObjectId]info.User, len(users))
+	userMap := make(map[int64]info.User, len(users))
 	for _, user := range users {
 		this.setUserLogo(&user)
 		userMap[user.UserId] = user
@@ -180,19 +188,19 @@ func (this *UserService) MapUserInfoByUserIds(userIds []bson.ObjectId) map[bson.
 }
 
 // 用户信息和博客设置信息
-func (this *UserService) MapUserInfoAndBlogInfosByUserIds(userIds []bson.ObjectId) map[bson.ObjectId]info.User {
+func (this *UserService) MapUserInfoAndBlogInfosByUserIds(userIds []int64) map[int64]info.User {
 	return this.MapUserInfoByUserIds(userIds)
 }
 
 // 返回info.UserAndBlog
-func (this *UserService) MapUserAndBlogByUserIds(userIds []bson.ObjectId) map[string]info.UserAndBlog {
+func (this *UserService) MapUserAndBlogByUserIds(userIds []int64) map[string]info.UserAndBlog {
 	users := []info.User{}
-	db.ListByQ(db.Users, bson.M{"_id": bson.M{"$in": userIds}}, &users)
+	engine.In("userId", userIds).Find(&user)
 
 	userBlogs := []info.UserBlog{}
-	db.ListByQ(db.UserBlogs, bson.M{"_id": bson.M{"$in": userIds}}, &userBlogs)
+	engine.In("userId", userIds).Find(&userBlogs)
 
-	userBlogMap := make(map[bson.ObjectId]info.UserBlog, len(userBlogs))
+	userBlogMap := make(map[int64]info.UserBlog, len(userBlogs))
 	for _, user := range userBlogs {
 		userBlogMap[user.UserId] = user
 	}
@@ -207,7 +215,7 @@ func (this *UserService) MapUserAndBlogByUserIds(userIds []bson.ObjectId) map[st
 			continue
 		}
 
-		userAndBlogMap[user.UserId.Hex()] = info.UserAndBlog{
+		userAndBlogMap[user.UserId] = info.UserAndBlog{
 			UserId:    user.UserId,
 			Username:  user.Username,
 			Email:     user.Email,
@@ -251,16 +259,16 @@ func (this *UserService) GetUserAndBlog(userId string) info.UserAndBlog {
 }
 
 // 通过ids得到users, 按id的顺序组织users
-func (this *UserService) GetUserInfosOrderBySeq(userIds []bson.ObjectId) []info.User {
+func (this *UserService) GetUserInfosOrderBySeq(userIds []int64) []info.User {
 	users := []info.User{}
-	db.ListByQ(db.Users, bson.M{"_id": bson.M{"$in": userIds}}, &users)
+	engine.In("userId", userIds).Find(&user)
 
-	usersMap := map[bson.ObjectId]info.User{}
+	usersMap := map[int64]info.User{}
 	for _, user := range users {
 		usersMap[user.UserId] = user
 	}
 
-	hasAppend := map[bson.ObjectId]bool{} // 为了防止userIds有重复的
+	hasAppend := map[int64]bool{} // 为了防止userIds有重复的
 	users2 := []info.User{}
 	for _, userId := range userIds {
 		if user, ok := usersMap[userId]; ok && !hasAppend[userId] {
@@ -277,9 +285,9 @@ func (this *UserService) GetUserInfoByName(emailOrUsername string) info.User {
 
 	user := info.User{}
 	if strings.Contains(emailOrUsername, "@") {
-		db.GetByQ(db.Users, bson.M{"Email": emailOrUsername}, &user)
+		engine.Where("email = ?", emailOrUsername).Get(&user)
 	} else {
-		db.GetByQ(db.Users, bson.M{"Username": emailOrUsername}, &user)
+		engine.Where("Username = ?", emailOrUsername).Get(&user)
 	}
 	this.setUserLogo(&user)
 	return user
@@ -294,19 +302,27 @@ func (this *UserService) UpdateUsername(userId, username string) (bool, string) 
 	username = strings.ToLower(username)
 
 	// 先判断是否存在
-	userIdO := bson.ObjectIdHex(userId)
-	if db.Has(db.Users, bson.M{"Username": username, "_id": bson.M{"$ne": userIdO}}) {
+	user := new(info.User)
+	total, err := engine.Where("id >?", 1).Count(user)
+	if total >= 1 {
 		return false, "usernameIsExisted"
 	}
 
-	ok := db.UpdateByQMap(db.Users, bson.M{"_id": userIdO}, bson.M{"Username": username, "UsernameRaw": usernameRaw})
+	user := new(info.User)
+	engine.Id(userId).Get(&user)
+	user.username = username
+	user.usernameRaw = usernameRaw
+	affected, err := engine.Id(userId).Cols("username", "usernameRaw").Update(&user)
 	return ok, ""
 }
 
 // 修改头像
 func (this *UserService) UpdateAvatar(userId, avatarPath string) bool {
-	userIdO := bson.ObjectIdHex(userId)
-	return db.UpdateByQField(db.Users, bson.M{"_id": userIdO}, "Logo", avatarPath)
+	user := new(info.User)
+	engine.Id(userId).Get(&user)
+	user.Logo = avatarPath
+	affected, err := engine.Id(userId).Cols("Logo").Update(&user)
+	return err == nil
 }
 
 //----------------------
@@ -322,8 +338,11 @@ func (this *UserService) UpdatePwd(userId, oldPwd, pwd string) (bool, string) {
 		return false, "GenerateHash error"
 	}
 
-	ok := db.UpdateByQField(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)}, "Pwd", passwd)
-	return ok, ""
+	user := new(info.User)
+	engine.Id(userId).Get(&user)
+	user.Pwd = pwd
+	affected, err := engine.Id(userId).Cols("Pwd").Update(&user)
+	return err == nil, ""
 }
 
 // 管理员重置密码
@@ -336,28 +355,37 @@ func (this *UserService) ResetPwd(adminUserId, userId, pwd string) (ok bool, msg
 	if passwd == "" {
 		return false, "GenerateHash error"
 	}
-	ok = db.UpdateByQField(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)}, "Pwd", passwd)
-	return
+	user := new(info.User)
+	engine.Id(userId).Get(&user)
+	user.Pwd = pwd
+	affected, err := engine.Id(userId).Cols("Pwd").Update(&user)
+	return err == nil, ""
 }
 
 // 修改主题
 func (this *UserService) UpdateTheme(userId, theme string) bool {
-	ok := db.UpdateByQField(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)}, "Theme", theme)
-	return ok
+	user := new(info.User)
+	engine.Id(userId).Get(&user)
+	user.Theme = pwd
+	affected, err := engine.Id(userId).Cols("Theme").Update(&user)
+	return err == nil
 }
 
 // 帐户类型设置
 func (this *UserService) UpdateAccount(userId, accountType string, accountStartTime, accountEndTime time.Time,
 	maxImageNum, maxImageSize, maxAttachNum, maxAttachSize, maxPerAttachSize int) bool {
-	return db.UpdateByQI(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)}, info.UserAccount{
-		AccountType:      accountType,
-		AccountStartTime: accountStartTime,
-		AccountEndTime:   accountEndTime,
-		MaxImageNum:      maxImageNum,
-		MaxImageSize:     maxImageSize,
-		MaxAttachNum:     maxAttachNum,
-		MaxAttachSize:    maxAttachSize,
-		MaxPerAttachSize: maxPerAttachSize,
+	user := new(info.User)
+	engine.Id(userId).Get(&user)
+	user.AccountType = accountType
+	user.AccountStartTime = accountStartTime
+	user.AccountEndTime = accountEndTime
+	user.MaxImageNum = maxImageNum
+	user.MaxImageSize = maxImageSize
+	user.MaxAttachNum = maxAttachNum
+	user.MaxAttachSize = maxAttachSize
+	user.MaxPerAttachSize = maxPerAttachSize
+	affected, err := engine.Id(userId).Cols("AccountType","AccountStartTime","AccountEndTime","MaxImageNum","MaxImageSize","MaxAttachNum","MaxAttachSize","MaxPerAttachSize").Update(&user)
+	return err == nil
 	})
 }
 
@@ -378,7 +406,11 @@ func (this *UserService) ActiveEmail(token string) (ok bool, msg, email string) 
 		}
 
 		// 修改之, 并将verified = true
-		ok = db.UpdateByQMap(db.Users, bson.M{"_id": userInfo.UserId}, bson.M{"Verified": true})
+		user := new(info.User)
+		engine.Id(userInfo.userId).Get(&user)
+		user.Verified = true
+		affected, err := engine.Id(userInfo.userId).Cols("Verified").Update(&user)
+
 		return
 	}
 
@@ -403,7 +435,11 @@ func (this *UserService) UpdateEmail(token string) (ok bool, msg, email string) 
 		}
 
 		// 修改之, 并将verified = true
-		ok = db.UpdateByQMap(db.Users, bson.M{"_id": tokenInfo.UserId}, bson.M{"Email": email, "Verified": true})
+		user := new(info.User)
+		user.Verified=true
+		user.Email=email
+		affected, err := engine.Id(userInfo.userId).Cols("Verified").Update(&user)
+		ok=err==nil
 		return
 	}
 
@@ -417,13 +453,13 @@ func (this *UserService) UpdateEmail(token string) (ok bool, msg, email string) 
 
 // 宽度
 func (this *UserService) UpdateColumnWidth(userId string, notebookWidth, noteListWidth, mdEditorWidth int) bool {
-	return db.UpdateByQMap(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)},
+	return db.UpdateByQMap(db.Users, bson.M{"_id": int64Hex(userId)},
 		bson.M{"NotebookWidth": notebookWidth, "NoteListWidth": noteListWidth, "MdEditorWidth": mdEditorWidth})
 }
 
 // 左侧是否隐藏
 func (this *UserService) UpdateLeftIsMin(userId string, leftIsMin bool) bool {
-	return db.UpdateByQMap(db.Users, bson.M{"_id": bson.ObjectIdHex(userId)}, bson.M{"LeftIsMin": leftIsMin})
+	return db.UpdateByQMap(db.Users, bson.M{"_id": int64Hex(userId)}, bson.M{"LeftIsMin": leftIsMin})
 }
 
 //-------------

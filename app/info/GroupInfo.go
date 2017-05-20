@@ -1,25 +1,24 @@
 package info
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
 // 分组
 type Group struct {
-	GroupId     bson.ObjectId `bson:"_id"` // 谁的
-	UserId      bson.ObjectId `UserId`     // 所有者Id
-	Title       string        `Title`      // 标题
-	UserCount   int           `UserCount`  // 用户数
-	CreatedTime time.Time     `CreatedTime`
+	GroupId     int64     `xorm:"pk"` // 谁的
+	UserId      int64     // 所有者Id
+	Title       string    // 标题
+	UserCount   int       // 用户数
+	CreatedTime time.Time `xorm:"created"`
 
-	Users []User `Users,omitempty` // 分组下的用户, 不保存, 仅查看
+	Users []User // 分组下的用户, 不保存, 仅查看
 }
 
 // 分组好友
 type GroupUser struct {
-	GroupUserId bson.ObjectId `bson:"_id"` // 谁的
-	GroupId     bson.ObjectId `GroupId`    // 分组
-	UserId      bson.ObjectId `UserId`     //  用户
-	CreatedTime time.Time     `CreatedTime`
+	GroupUserId int64     `xorm:"pk"` // 谁的
+	GroupId     int64     // 分组
+	UserId      int64     //  用户
+	CreatedTime time.Time `xorm:"created"`
 }

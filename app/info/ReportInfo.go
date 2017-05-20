@@ -1,19 +1,18 @@
 package info
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
 // 举报
 type Report struct {
-	ReportId bson.ObjectId `bson:"_id"`
-	NoteId   bson.ObjectId `NoteId`
+	ReportId int64 `xorm:"pk"`
+	NoteId   int64
 
-	UserId bson.ObjectId `UserId` // UserId回复ToUserId
-	Reason string        `Reason` // 评论内容
+	UserId int64  // UserId回复ToUserId
+	Reason string // 评论内容
 
-	CommentId bson.ObjectId `CommendId,omitempty` // 对某条评论进行回复
+	CommentId int64 // 对某条评论进行回复
 
-	CreatedTime time.Time `CreatedTime`
+	CreatedTime time.Time `xorm:"Created"`
 }

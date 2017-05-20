@@ -1,7 +1,6 @@
 package info
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -38,7 +37,7 @@ type EachSharedNotebookAndNotes struct {
 }
 
 type SharedNotebookAndNotes struct {
-	UserId bson.ObjectId                         `bson:"_id"`
+	UserId int64                                 `xorm:"pk"`
 	Shared map[string]EachSharedNotebookAndNotes // userId =>
 }
 
@@ -52,7 +51,7 @@ type SharedNotebookAndNotes struct {
 
 // 用户正在共享的notebook, note
 type SharingNotebookAndNotes struct {
-	UserId    bson.ObjectId       `bson:"_id"`
+	UserId    int64               `xorm:"pk"`
 	Notes     map[string][]string // noteId => []string{userId1, userId2}
 	Notebooks map[string][]string // notebookId => []string{userId1, userId2}
 }
@@ -64,7 +63,7 @@ type SharingNotebookAndNotes struct {
 每一个sharing一条记录, 这样更好操作
 类似Notebook的
 {
-	_id
+	pk
 	userId
 	toUserId
 	noteId
@@ -74,15 +73,15 @@ type SharingNotebookAndNotes struct {
 */
 
 type ShareNotebook struct {
-	ShareNotebookId bson.ObjectId `bson:"_id,omitempty"` // 必须要设置bson:"_id" 不然mgo不会认为是主键
-	UserId          bson.ObjectId `bson:"UserId"`
-	ToUserId        bson.ObjectId `bson:"ToUserId,omitempty"`
-	ToGroupId       bson.ObjectId `bson:"ToGroupId,omitempty"` // 分享给的用户组
-	ToGroup         Group         `ToGroup,omitempty`          // 仅仅为了显示, 不存储, 分组信息
-	NotebookId      bson.ObjectId `bson:"NotebookId"`
-	Seq             int           `bson:"Seq"`  // 排序
-	Perm            int           `bson:"Perm"` // 权限, 其下所有notes 0只读, 1可修改
-	CreatedTime     time.Time     `CreatedTime,omitempty`
+	ShareNotebookId int64 `xorm:"pk"` // 必须要设置xorm:"pk" 不然mgo不会认为是主键
+	UserId          int64
+	ToUserId        int64
+	ToGroupId       int64 // 分享给的用户组
+	ToGroup         Group // 仅仅为了显示, 不存储, 分组信息
+	NotebookId      int64
+	Seq             int       // 排序
+	Perm            int       `xorm:"Perm"` // 权限, 其下所有notes 0只读, 1可修改
+	CreatedTime     time.Time `xorm:"Created"`
 	//	IsDefault       bool          `IsDefault` // 是否是默认共享notebook, perm seq=-9999999, NotebookId=null
 }
 
@@ -101,7 +100,7 @@ type ShareNotebooks struct {
 
 	// Notebook与ShareNotebook公用的不能生成json
 	Seq        int
-	NotebookId bson.ObjectId
+	NotebookId int64
 	IsDefault  bool // 是否是默认笔记本
 }
 
@@ -123,7 +122,7 @@ type ShareNotebooksByUser map[string][]ShareNotebooks
 /*
 type ShareNotebooksByUser struct {
 //	User
-	UserId bson.ObjectId
+	UserId int64
 	ShareNotebooks []ShareNotebooks // SubShareNotebooks 一样的, 不过用[]更容易理解
 }
 */
@@ -134,14 +133,14 @@ type ShareNotebooksByUser struct {
 // use leanote
 // db.leanote.share_notes.ensureIndex({"UserId":1,"ToUserId":1, "NoteId": 1},{"unique":true})
 type ShareNote struct {
-	ShareNoteId bson.ObjectId `bson:"_id,omitempty"` // 必须要设置bson:"_id" 不然mgo不会认为是主键
-	UserId      bson.ObjectId `bson:"UserId"`
-	ToUserId    bson.ObjectId `bson:"ToUserId,omitempty"`
-	ToGroupId   bson.ObjectId `bson:"ToGroupId,omitempty"` // 分享给的用户组
-	ToGroup     Group         `ToGroup,omitempty`          // 仅仅为了显示, 不存储, 分组信息
-	NoteId      bson.ObjectId `bson:"NoteId"`
-	Perm        int           `bson:"Perm"` // 权限, 0只读, 1可修改
-	CreatedTime time.Time     `CreatedTime`
+	ShareNoteId int64 `xorm:"pk"` // 必须要设置xorm:"pk" 不然mgo不会认为是主键
+	UserId      int64
+	ToUserId    int64
+	ToGroupId   int64 // 分享给的用户组
+	ToGroup     Group // 仅仅为了显示, 不存储, 分组信息
+	NoteId      int64
+	Perm        int       `xorm:"Perm"` // 权限, 0只读, 1可修改
+	CreatedTime time.Time `xorm:"created"`
 }
 
 // 谁共享给了谁note
@@ -149,10 +148,10 @@ type ShareNote struct {
 // 唯一: UserId-ToUserId
 // db.leanote.has_share_notes.ensureIndex({"UserId":1,"ToUserId":1},{"unique":true})
 type HasShareNote struct {
-	HasShareNotebookId bson.ObjectId `bson:"_id,omitempty"` // 必须要设置bson:"_id" 不然mgo不会认为是主键
-	UserId             bson.ObjectId `bson:"UserId"`
-	ToUserId           bson.ObjectId `bson:"ToUserId"`
-	Seq                int           `bson:"Seq"` // 以后还可以用户排序
+	HasShareNotebookId int64 `xorm:"pk"` // 必须要设置xorm:"pk" 不然mgo不会认为是主键
+	UserId             int64
+	ToUserId           int64
+	Seq                int // 以后还可以用户排序
 }
 
 // 将note与权限结合起来
@@ -163,7 +162,7 @@ type ShareNoteWithPerm struct {
 
 // 查看共享状态, 用户的信息
 type ShareUserInfo struct {
-	ToUserId          bson.ObjectId `bson:"UserId"`
+	ToUserId          int64
 	Email             string
 	Perm              int  // note或其notebook的权限
 	NotebookHasShared bool // 是否其notebook共享了

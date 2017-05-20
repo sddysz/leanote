@@ -1,7 +1,6 @@
 package info
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -24,9 +23,9 @@ const (
 )
 
 type Token struct {
-	UserId      bson.ObjectId `bson:"_id"`
-	Email       string        `Email`
-	Token       string        `Token`
-	Type        int           `Type`
-	CreatedTime time.Time     `CreatedTime`
+	UserId      int64
+	Email       string
+	Token       string
+	Type        int
+	CreatedTime time.Time `xorm:"created"`
 }

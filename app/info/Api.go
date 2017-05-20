@@ -1,7 +1,6 @@
 package info
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -40,10 +39,10 @@ type ApiNote struct {
 
 // 内容
 type ApiNoteContent struct {
-	NoteId bson.ObjectId `bson:"_id,omitempty"`
-	UserId bson.ObjectId `bson:"UserId"`
+	NoteId int64 `xorm:"pk"`
+	UserId int64
 
-	Content string `Content`
+	Content string `xorm:"text"`
 
 	//	CreatedTime   time.Time     `CreatedTime`
 	//	UpdatedTime   time.Time     `UpdatedTime`
@@ -71,17 +70,17 @@ type ApiUser struct {
 // Notebook
 //----------
 type ApiNotebook struct {
-	NotebookId       bson.ObjectId `bson:"_id,omitempty"` // 必须要设置bson:"_id" 不然mgo不会认为是主键
-	UserId           bson.ObjectId `bson:"UserId"`
-	ParentNotebookId bson.ObjectId `bson:"ParentNotebookId,omitempty"` // 上级
-	Seq              int           `Seq`                               // 排序
-	Title            string        `Title`                             // 标题
-	UrlTitle         string        `UrlTitle`                          // Url标题 2014/11.11加
-	IsBlog           bool          `IsBlog,omitempty`                  // 是否是Blog 2013/12/29 新加
-	CreatedTime      time.Time     `CreatedTime,omitempty`
-	UpdatedTime      time.Time     `UpdatedTime,omitempty`
-	Usn              int           `Usn` // UpdateSequenceNum
-	IsDeleted        bool          `IsDeleted`
+	NotebookId       int64 `xorm:"pk"` // 必须要设置bson:"_id" 不然mgo不会认为是主键
+	UserId           int64
+	ParentNotebookId int64     // 上级
+	Seq              int       // 排序
+	Title            string    // 标题
+	UrlTitle         string    // Url标题 2014/11.11加
+	IsBlog           bool      // 是否是Blog 2013/12/29 新加
+	CreatedTime      time.Time `xorm:"created"`
+	UpdatedTime      time.Time `xorm:"updated"`
+	Usn              int       // UpdateSequenceNum
+	IsDeleted        bool      `xorm:"deleted"`
 }
 
 //---------
@@ -102,7 +101,7 @@ func NewApiRe() ApiRe {
 type AuthOk struct {
 	Ok       bool
 	Token    string
-	UserId   bson.ObjectId
+	UserId   int64
 	Email    string
 	Username string
 }
