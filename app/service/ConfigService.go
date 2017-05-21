@@ -2,16 +2,15 @@ package service
 
 import (
 	"fmt"
-	"github.com/sddysz/leanote/app/db"
-	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"github.com/revel/revel"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/revel/revel"
+	"github.com/sddysz/leanote/app/info"
+	. "github.com/sddysz/leanote/app/lea"
 )
 
 // 配置服务
@@ -50,7 +49,7 @@ func (this *ConfigService) InitGlobalConfigs() bool {
 
 	configs := []info.Config{}
 	// db.ListByQ(db.Configs, bson.M{"UserId": userInfo.UserId}, &configs)
-	db.ListByQ(db.Configs, bson.M{}, &configs)
+	Engine.Find(&configs)
 
 	for _, config := range configs {
 		if config.IsArr {
@@ -96,8 +95,8 @@ func (this *ConfigService) updateGlobalConfig(userId, key string, value interfac
 	// 判断是否存在
 	if _, ok := this.GlobalAllConfigs[key]; !ok {
 		// 需要添加
-		config := info.Config{ConfigId: bson.NewObjectId(),
-			UserId:      bson.ObjectIdHex(userId), // 没用
+		config := info.Config{
+			UserId:      userId, // 没用
 			Key:         key,
 			IsArr:       isArr,
 			IsMap:       isMap,
@@ -121,9 +120,10 @@ func (this *ConfigService) updateGlobalConfig(userId, key string, value interfac
 			config.ValueStr = v
 			this.GlobalStringConfigs[key] = v
 		}
-		return db.Insert(db.Configs, config)
+		affected, err := Engine.Insert(&config)
+		return err == nil
 	} else {
-		i := bson.M{"UpdatedTime": time.Now()}
+		//i := bson.M{"UpdatedTime": time.Now()}
 		this.GlobalAllConfigs[key] = value
 		if isArr {
 			v, _ := value.([]string)
@@ -143,22 +143,27 @@ func (this *ConfigService) updateGlobalConfig(userId, key string, value interfac
 			this.GlobalStringConfigs[key] = v
 		}
 		// return db.UpdateByQMap(db.Configs, bson.M{"UserId": bson.ObjectIdHex(userId), "Key": key}, i)
-		return db.UpdateByQMap(db.Configs, bson.M{"Key": key}, i)
+		affected, err = Engine.Where("Key=?", key).Update(config)
+		return err == nil
 	}
 }
 
 // 更新用户配置
 func (this *ConfigService) UpdateGlobalStringConfig(userId, key string, value string) bool {
-	return this.updateGlobalConfig(userId, key, value, false, false, false)
+	//return this.updateGlobalConfig(userId, key, value, false, false, false)
+	return true
 }
 func (this *ConfigService) UpdateGlobalArrayConfig(userId, key string, value []string) bool {
-	return this.updateGlobalConfig(userId, key, value, true, false, false)
+	//return this.updateGlobalConfig(userId, key, value, true, false, false)
+	return true
 }
 func (this *ConfigService) UpdateGlobalMapConfig(userId, key string, value map[string]string) bool {
-	return this.updateGlobalConfig(userId, key, value, false, true, false)
+	//return this.updateGlobalConfig(userId, key, value, false, true, false)
+	return true
 }
 func (this *ConfigService) UpdateGlobalArrMapConfig(userId, key string, value []map[string]string) bool {
-	return this.updateGlobalConfig(userId, key, value, false, false, true)
+	//return this.updateGlobalConfig(userId, key, value, false, false, true)
+	return true
 }
 
 // 获取全局配置, 博客平台使用
@@ -197,101 +202,101 @@ func (this *ConfigService) UpdateShareNoteConfig(registerSharedUserId string,
 	registerSharedNotebookPerms, registerSharedNotePerms []int,
 	registerSharedNotebookIds, registerSharedNoteIds, registerCopyNoteIds []string) (ok bool, msg string) {
 
-	defer func() {
-		if err := recover(); err != nil {
-			ok = false
-			msg = fmt.Sprint(err)
-		}
-	}()
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		ok = false
+	// 		msg = fmt.Sprint(err)
+	// 	}
+	// }()
 
-	// 用户是否存在?
-	if registerSharedUserId == "" {
-		ok = true
-		msg = "share userId is blank, So it share nothing to register"
-		this.UpdateGlobalStringConfig(this.adminUserId, "registerSharedUserId", "")
-		return
-	} else {
-		user := userService.GetUserInfo(registerSharedUserId)
-		if user.UserId == "" {
-			ok = false
-			msg = "no such user: " + registerSharedUserId
-			return
-		} else {
-			this.UpdateGlobalStringConfig(this.adminUserId, "registerSharedUserId", registerSharedUserId)
-		}
-	}
+	// // 用户是否存在?
+	// if registerSharedUserId == "" {
+	// 	ok = true
+	// 	msg = "share userId is blank, So it share nothing to register"
+	// 	this.UpdateGlobalStringConfig(this.adminUserId, "registerSharedUserId", "")
+	// 	return
+	// } else {
+	// 	user := userService.GetUserInfo(registerSharedUserId)
+	// 	if user.UserId == "" {
+	// 		ok = false
+	// 		msg = "no such user: " + registerSharedUserId
+	// 		return
+	// 	} else {
+	// 		this.UpdateGlobalStringConfig(this.adminUserId, "registerSharedUserId", registerSharedUserId)
+	// 	}
+	// }
 
-	notebooks := []map[string]string{}
-	// 共享笔记本
-	if len(registerSharedNotebookIds) > 0 {
-		for i := 0; i < len(registerSharedNotebookIds); i++ {
-			// 判断笔记本是否存在
-			notebookId := registerSharedNotebookIds[i]
-			if notebookId == "" {
-				continue
-			}
-			notebook := notebookService.GetNotebook(notebookId, registerSharedUserId)
-			if notebook.NotebookId == "" {
-				ok = false
-				msg = "The user has no such notebook: " + notebookId
-				return
-			} else {
-				perm := "0"
-				if registerSharedNotebookPerms[i] == 1 {
-					perm = "1"
-				}
-				notebooks = append(notebooks, map[string]string{"notebookId": notebookId, "perm": perm})
-			}
-		}
-	}
-	this.UpdateGlobalArrMapConfig(this.adminUserId, "registerSharedNotebooks", notebooks)
+	// notebooks := []map[string]string{}
+	// // 共享笔记本
+	// if len(registerSharedNotebookIds) > 0 {
+	// 	for i := 0; i < len(registerSharedNotebookIds); i++ {
+	// 		// 判断笔记本是否存在
+	// 		notebookId := registerSharedNotebookIds[i]
+	// 		if notebookId == "" {
+	// 			continue
+	// 		}
+	// 		notebook := notebookService.GetNotebook(notebookId, registerSharedUserId)
+	// 		if notebook.NotebookId == "" {
+	// 			ok = false
+	// 			msg = "The user has no such notebook: " + notebookId
+	// 			return
+	// 		} else {
+	// 			perm := "0"
+	// 			if registerSharedNotebookPerms[i] == 1 {
+	// 				perm = "1"
+	// 			}
+	// 			notebooks = append(notebooks, map[string]string{"notebookId": notebookId, "perm": perm})
+	// 		}
+	// 	}
+	// }
+	// this.UpdateGlobalArrMapConfig(this.adminUserId, "registerSharedNotebooks", notebooks)
 
-	notes := []map[string]string{}
-	// 共享笔记
-	if len(registerSharedNoteIds) > 0 {
-		for i := 0; i < len(registerSharedNoteIds); i++ {
-			// 判断笔记本是否存在
-			noteId := registerSharedNoteIds[i]
-			if noteId == "" {
-				continue
-			}
-			note := noteService.GetNote(noteId, registerSharedUserId)
-			if note.NoteId == "" {
-				ok = false
-				msg = "The user has no such note: " + noteId
-				return
-			} else {
-				perm := "0"
-				if registerSharedNotePerms[i] == 1 {
-					perm = "1"
-				}
-				notes = append(notes, map[string]string{"noteId": noteId, "perm": perm})
-			}
-		}
-	}
-	this.UpdateGlobalArrMapConfig(this.adminUserId, "registerSharedNotes", notes)
+	// notes := []map[string]string{}
+	// // 共享笔记
+	// if len(registerSharedNoteIds) > 0 {
+	// 	for i := 0; i < len(registerSharedNoteIds); i++ {
+	// 		// 判断笔记本是否存在
+	// 		noteId := registerSharedNoteIds[i]
+	// 		if noteId == "" {
+	// 			continue
+	// 		}
+	// 		note := noteService.GetNote(noteId, registerSharedUserId)
+	// 		if note.NoteId == "" {
+	// 			ok = false
+	// 			msg = "The user has no such note: " + noteId
+	// 			return
+	// 		} else {
+	// 			perm := "0"
+	// 			if registerSharedNotePerms[i] == 1 {
+	// 				perm = "1"
+	// 			}
+	// 			notes = append(notes, map[string]string{"noteId": noteId, "perm": perm})
+	// 		}
+	// 	}
+	// }
+	// this.UpdateGlobalArrMapConfig(this.adminUserId, "registerSharedNotes", notes)
 
-	// 复制
-	noteIds := []string{}
-	if len(registerCopyNoteIds) > 0 {
-		for i := 0; i < len(registerCopyNoteIds); i++ {
-			// 判断笔记本是否存在
-			noteId := registerCopyNoteIds[i]
-			if noteId == "" {
-				continue
-			}
-			note := noteService.GetNote(noteId, registerSharedUserId)
-			if note.NoteId == "" {
-				ok = false
-				msg = "The user has no such note: " + noteId
-				return
-			} else {
-				noteIds = append(noteIds, noteId)
-			}
-		}
-	}
-	this.UpdateGlobalArrayConfig(this.adminUserId, "registerCopyNoteIds", noteIds)
-
+	// // 复制
+	// noteIds := []string{}
+	// if len(registerCopyNoteIds) > 0 {
+	// 	for i := 0; i < len(registerCopyNoteIds); i++ {
+	// 		// 判断笔记本是否存在
+	// 		noteId := registerCopyNoteIds[i]
+	// 		if noteId == "" {
+	// 			continue
+	// 		}
+	// 		note := noteService.GetNote(noteId, registerSharedUserId)
+	// 		if note.NoteId == "" {
+	// 			ok = false
+	// 			msg = "The user has no such note: " + noteId
+	// 			return
+	// 		} else {
+	// 			noteIds = append(noteIds, noteId)
+	// 		}
+	// 	}
+	// }
+	// this.UpdateGlobalArrayConfig(this.adminUserId, "registerCopyNoteIds", noteIds)
+	msg = ""
 	ok = true
 	return
 }
