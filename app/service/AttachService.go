@@ -1,14 +1,12 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
-	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"github.com/revel/revel"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"strings"
-	"time"
+
+	"github.com/revel/revel"
+	"github.com/sddysz/leanote/app/info"
+	. "github.com/sddysz/leanote/app/lea"
 )
 
 type AttachService struct {
@@ -18,17 +16,17 @@ type AttachService struct {
 // api调用时, 添加attach之前是没有note的
 // fromApi表示是api添加的, updateNote传过来的, 此时不要incNote's usn, 因为updateNote会inc的
 func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool, msg string) {
-	attach.CreatedTime = time.Now()
-	ok = db.Insert(db.Attachs, attach)
 
-	note := noteService.GetNoteById(attach.NoteId.Hex())
+	affected, err := Engine.Insert(attach)
+	ok = err == nil
+	note := noteService.GetNoteById(attach.NoteId)
 
 	// api调用时, 添加attach之前是没有note的
 	var userId string
 	if note.NoteId != "" {
-		userId = note.UserId.Hex()
+		userId = note.UserId
 	} else {
-		userId = attach.UploadUserId.Hex()
+		userId = attach.UploadUserId
 	}
 
 	if ok {
@@ -46,8 +44,10 @@ func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool,
 
 // 更新笔记的附件个数
 // addNum 1或-1
-func (this *AttachService) updateNoteAttachNum(noteId bson.ObjectId, addNum int) bool {
-	num := db.Count(db.Attachs, bson.M{"NoteId": noteId})
+func (this *AttachService) updateNoteAttachNum(noteId int64, addNum int) bool {
+	attach := info.Attach{}
+	num, err := Engine.Where("NoteId=?", noteId).Count(attach)
+
 	/*
 		note := info.Note{}
 		note = noteService.GetNoteById(noteId.Hex())
@@ -57,7 +57,10 @@ func (this *AttachService) updateNoteAttachNum(noteId bson.ObjectId, addNum int)
 		}
 		Log(note.AttachNum)
 	*/
-	return db.UpdateByQField(db.Notes, bson.M{"_id": noteId}, "AttachNum", num)
+	note := info.Note{}
+	note.AttachNum = num
+	affected, err := Engine.Id(noteId).Cols("AttachNum").Update(note)
+	return err == nil
 }
 
 // list attachs
@@ -77,18 +80,17 @@ func (this *AttachService) ListAttachs(noteId, userId string) []info.Attach {
 
 	// TODO 这里, 优化权限控制
 
-	db.ListByQ(db.Attachs, bson.M{"NoteId": bson.ObjectIdHex(noteId)}, &attachs)
-
+	Engine.Where("NoteId=?", noteId).Find(&attachs)
 	return attachs
 }
 
 // api调用, 通过noteIds得到note's attachs, 通过noteId归类返回
-func (this *AttachService) getAttachsByNoteIds(noteIds []bson.ObjectId) map[string][]info.Attach {
+func (this *AttachService) getAttachsByNoteIds(noteIds []int64) map[string][]info.Attach {
 	attachs := []info.Attach{}
-	db.ListByQ(db.Attachs, bson.M{"NoteId": bson.M{"$in": noteIds}}, &attachs)
+	Engine.In("NoteId", noteIds).Find(&attachs)
 	noteAttchs := make(map[string][]info.Attach)
 	for _, attach := range attachs {
-		noteId := attach.NoteId.Hex()
+		noteId := attach.NoteId
 		if itAttachs, ok := noteAttchs[noteId]; ok {
 			noteAttchs[noteId] = append(itAttachs, attach)
 		} else {
@@ -99,15 +101,18 @@ func (this *AttachService) getAttachsByNoteIds(noteIds []bson.ObjectId) map[stri
 }
 
 func (this *AttachService) UpdateImageTitle(userId, fileId, title string) bool {
-	return db.UpdateByIdAndUserIdField(db.Files, fileId, userId, "Title", title)
+	attach := info.Attach{}
+	attach.Title = title
+	affected, err := Engine.Where("UserId=?", userId).And("FileId=?", fileId).Cols("Title").Update(&attach)
+	return err == nil
 }
 
 // Delete note to delete attas firstly
 func (this *AttachService) DeleteAllAttachs(noteId, userId string) bool {
 	note := noteService.GetNoteById(noteId)
-	if note.UserId.Hex() == userId {
+	if note.UserId == userId {
 		attachs := []info.Attach{}
-		db.ListByQ(db.Attachs, bson.M{"NoteId": bson.ObjectIdHex(noteId)}, &attachs)
+		Engine.Where("NoteId=?", noteId).Find(&attachs)
 		for _, attach := range attachs {
 			attach.Path = strings.TrimLeft(attach.Path, "/")
 			os.Remove(revel.BasePath + "/" + attach.Path)
@@ -122,22 +127,23 @@ func (this *AttachService) DeleteAllAttachs(noteId, userId string) bool {
 // 删除附件为什么要incrNoteUsn ? 因为可能没有内容要修改的
 func (this *AttachService) DeleteAttach(attachId, userId string) (bool, string) {
 	attach := info.Attach{}
-	db.Get(db.Attachs, attachId, &attach)
+
+	Engine.Id(attachId).Get(&attach)
 
 	if attach.AttachId != "" {
 		// 判断是否有权限为笔记添加附件
-		if !shareService.HasUpdateNotePerm(attach.NoteId.Hex(), userId) {
+		if !shareService.HasUpdateNotePerm(attach.NoteId, userId) {
 			return false, "No Perm"
 		}
 
-		if db.Delete(db.Attachs, bson.M{"_id": bson.ObjectIdHex(attachId)}) {
+		if affected, err := Engine.Id(attachId).Delete(&attach); err == nil {
 			this.updateNoteAttachNum(attach.NoteId, -1)
 			attach.Path = strings.TrimLeft(attach.Path, "/")
 			err := os.Remove(revel.BasePath + "/" + attach.Path)
 			if err == nil {
 				// userService.UpdateAttachSize(note.UserId.Hex(), -attach.Size)
 				// 修改note Usn
-				noteService.IncrNoteUsn(attach.NoteId.Hex(), userId)
+				noteService.IncrNoteUsn(attach.NoteId, userId)
 
 				return true, "delete file success"
 			}
@@ -157,7 +163,7 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 	}
 
 	attach = info.Attach{}
-	db.Get(db.Attachs, attachId, &attach)
+	Engine.Id(attachId).Get(&attach)
 	path := attach.Path
 	if path == "" {
 		return
@@ -173,12 +179,12 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 	}
 
 	// 笔记是否是我的
-	if note.UserId.Hex() == userId {
+	if note.UserId == userId {
 		return
 	}
 
 	// 我是否有权限查看或协作
-	if shareService.HasReadNotePerm(attach.NoteId.Hex(), userId) {
+	if shareService.HasReadNotePerm(attach.NoteId, userId) {
 		return
 	}
 
@@ -190,13 +196,11 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 // noteService调用, 权限已判断
 func (this *AttachService) CopyAttachs(noteId, toNoteId, toUserId string) bool {
 	attachs := []info.Attach{}
-	db.ListByQ(db.Attachs, bson.M{"NoteId": bson.ObjectIdHex(noteId)}, &attachs)
-
+	Engine.Where("NoteId=?", noteId).Find(&attachs)
 	// 复制之
-	toNoteIdO := bson.ObjectIdHex(toNoteId)
 	for _, attach := range attachs {
 		attach.AttachId = ""
-		attach.NoteId = toNoteIdO
+		attach.NoteId = toNoteId
 
 		// 文件复制一份
 		_, ext := SplitFilename(attach.Name)

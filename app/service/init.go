@@ -1,14 +1,15 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
-	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/go-xorm/core"
+	"github.com/sddysz/leanote/app/info"
 )
 
 // init service, for share service bettween services
@@ -135,15 +136,31 @@ func getUniqueUrlTitle(userId string, urlTitle string, types string, padding int
 	}
 	userIdO := bson.ObjectIdHex(userId)
 
-	var collection *mgo.Collection
-	if types == "note" {
-		collection = db.Notes
-	} else if types == "notebook" {
-		collection = db.Notebooks
-	} else if types == "single" {
-		collection = db.BlogSingles
+	user := new(info.User)
+
+	if err != nil {
 	}
-	for db.Has(collection, bson.M{"UserId": userIdO, "UrlTitle": urlTitle2}) { // 用户下唯一
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(user)
+		//...
+	}
+
+	var rows *core.Rows
+	if types == "note" {
+		note := new(info.Note)
+		rows, err := engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(note)
+		defer rows.Close()
+	} else if types == "notebook" {
+		notebook := new(info.Notebook)
+		rows, err := engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(notebook)
+		defer rows.Close()
+	} else if types == "single" {
+		blogSingle := new(info.BlogSingle)
+		rows, err := engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(blogSingle)
+		defer rows.Close()
+	}
+	for rows.Next() { // 用户下唯一
 		padding++
 		urlTitle2 = urlTitle + "-" + strconv.Itoa(padding)
 	}
@@ -169,7 +186,7 @@ func GetUrTitle(userId string, title string, types string, id string) string {
 			urlTitle = subIdHalf(id)
 		}
 		// 不允许title是ObjectId
-	} else if bson.IsObjectIdHex(title) {
+	} else if b, error := strconv.Atoi(title); error == nil {
 		urlTitle = subIdHalf(id)
 	}
 

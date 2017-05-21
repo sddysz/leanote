@@ -7,9 +7,9 @@ import (
 	//	"github.com/revel/revel"
 	"errors"
 	"fmt"
-	. "github.com/sddysz/leanote/app/lea"
-	"strconv"
 	"strings"
+
+	. "github.com/sddysz/leanote/app/lea"
 )
 
 // 登录与权限 Login & Register
@@ -49,9 +49,9 @@ func (this *AuthService) Register(email, pwd, fromUserId string) (bool, string) 
 	if passwd == "" {
 		return false, "GenerateHash error"
 	}
-	user := info.User{UserId: bson.NewObjectId(), Email: email, Username: email, Pwd: passwd}
-	if fromUserId != "" && IsObjectId(fromUserId) {
-		user.FromUserId = bson.ObjectIdHex(fromUserId)
+	user := info.User{Email: email, Username: email, Pwd: passwd}
+	if fromUserId != "" {
+		user.FromUserId = fromUserId
 	}
 	return this.register(user)
 }
@@ -63,43 +63,42 @@ func (this *AuthService) register(user info.User) (bool, string) {
 		notebook := info.Notebook{
 			Seq:    -1,
 			UserId: user.UserId}
-		title2Id := map[string]bson.ObjectId{"life": bson.NewObjectId(), "study": bson.NewObjectId(), "work": bson.NewObjectId()}
-		for title, objectId := range title2Id {
+		title2Id := []string{"life", "study", "work"}
+		for title := range title2Id {
 			notebook.Title = title
-			notebook.NotebookId = objectId
 			notebook.UserId = user.UserId
 			notebookService.AddNotebook(notebook)
 		}
 
 		// 添加leanote -> 该用户的共享
-		registerSharedUserId := configService.GetGlobalStringConfig("registerSharedUserId")
-		if registerSharedUserId != "" {
-			registerSharedNotebooks := configService.GetGlobalArrMapConfig("registerSharedNotebooks")
-			registerSharedNotes := configService.GetGlobalArrMapConfig("registerSharedNotes")
-			registerCopyNoteIds := configService.GetGlobalArrayConfig("registerCopyNoteIds")
+		// registerSharedUserId := configService.GetGlobalStringConfig("registerSharedUserId")
+		// if registerSharedUserId != "" {
+		// 	registerSharedNotebooks := configService.GetGlobalArrMapConfig("registerSharedNotebooks")
+		// 	registerSharedNotes := configService.GetGlobalArrMapConfig("registerSharedNotes")
+		// 	registerCopyNoteIds := configService.GetGlobalArrayConfig("registerCopyNoteIds")
 
-			// 添加共享笔记本
-			for _, notebook := range registerSharedNotebooks {
-				perm, _ := strconv.Atoi(notebook["perm"])
-				shareService.AddShareNotebookToUserId(notebook["notebookId"], perm, registerSharedUserId, userId)
-			}
+		// 	// 添加共享笔记本
+		// 	for _, notebook := range registerSharedNotebooks {
+		// 		perm, _ := strconv.Atoi(notebook["perm"])
+		// 		shareService.AddShareNotebookToUserId(notebook["notebookId"], perm, registerSharedUserId, userId)
+		// 	}
 
-			// 添加共享笔记
-			for _, note := range registerSharedNotes {
-				perm, _ := strconv.Atoi(note["perm"])
-				shareService.AddShareNoteToUserId(note["noteId"], perm, registerSharedUserId, userId)
-			}
+		// 	// 添加共享笔记
+		// 	for _, note := range registerSharedNotes {
+		// 		perm, _ := strconv.Atoi(note["perm"])
+		// 		shareService.AddShareNoteToUserId(note["noteId"], perm, registerSharedUserId, userId)
+		// 	}
 
-			// 复制笔记
-			for _, noteId := range registerCopyNoteIds {
-				note := noteService.CopySharedNote(noteId, title2Id["life"].Hex(), registerSharedUserId, user.UserId.Hex())
-				//				Log(noteId)
-				//				Log("Copy")
-				//				LogJ(note)
-				noteUpdate := bson.M{"IsBlog": false} // 不要是博客
-				noteService.UpdateNote(user.UserId.Hex(), note.NoteId.Hex(), noteUpdate, -1)
-			}
-		}
+		// 	// 复制笔记
+		// 	for _, noteId := range registerCopyNoteIds {
+		// 		note := noteService.CopySharedNote(noteId, title2Id["life"].Hex(), registerSharedUserId, user.UserId.Hex())
+		// 		//				Log(noteId)
+		// 		//				Log("Copy")
+		// 		//				LogJ(note)
+		// 		noteUpdate := bson.M{"IsBlog": false} // 不要是博客
+		// 		noteService.UpdateNote(user.UserId.Hex(), note.NoteId.Hex(), noteUpdate, -1)
+		// 	}
+		// }
 
 		//---------------
 		// 添加一条userBlog

@@ -3,8 +3,6 @@ package service
 import (
 	"github.com/sddysz/leanote/app/info"
 	//	. "github.com/sddysz/leanote/app/lea"
-	"github.com/sddysz/leanote/app/db"
-	"gopkg.in/mgo.v2/bson"
 	"time"
 )
 
@@ -17,28 +15,34 @@ type AlbumService struct {
 func (this *AlbumService) AddAlbum(album info.Album) bool {
 	album.CreatedTime = time.Now()
 	album.Type = IMAGE_TYPE
-	return db.Insert(db.Albums, album)
+	affected, err := Engine.Insert(album)
+	return err == nil
 }
 
 // get albums
 func (this *AlbumService) GetAlbums(userId string) []info.Album {
-	albums := []info.Album{}
-	db.ListByQ(db.Albums, bson.M{"UserId": bson.ObjectIdHex(userId)}, &albums)
+	albums := make([]info.Album{}, 0)
+	Engine.Where("UserId = ?", userId).find(&albums)
+
 	return albums
 }
 
 // delete album
 // presupposition: has no images under this ablum
 func (this *AlbumService) DeleteAlbum(userId, albumId string) (bool, string) {
-	if db.Count(db.Files, bson.M{"AlbumId": bson.ObjectIdHex(albumId),
-		"UserId": bson.ObjectIdHex(userId),
-	}) == 0 {
-		return db.DeleteByIdAndUserId(db.Albums, albumId, userId), ""
+	file := info.File{}
+	total, err := Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Count(&file)
+	if total == 0 {
+		album := info.Album{}
+		affected, err := Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Delete(album)
+		return err == nil, ""
 	}
 	return false, "has images"
 }
 
 // update album name
 func (this *AlbumService) UpdateAlbum(albumId, userId, name string) bool {
-	return db.UpdateByIdAndUserIdField(db.Albums, albumId, userId, "Name", name)
+	album := info.Album{}
+	affected, err := Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Cols("Name").Update(album)
+	return err == nil, ""
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
 	"gopkg.in/mgo.v2/bson"
+
 	//	"time"
 	//	"sort"
 	"strconv"
@@ -45,9 +46,8 @@ func (this *BlogService) GetBlogByIdAndUrlTitle(userId string, noteIdOrUrlTitle 
 		return this.GetBlog(noteIdOrUrlTitle)
 	}
 	note := info.Note{}
-	db.GetByQ(db.Notes, bson.M{"UserId": bson.ObjectIdHex(userId), "UrlTitle": encodeValue(noteIdOrUrlTitle),
-		"IsBlog":  true,
-		"IsTrash": false, "IsDeleted": false}, &note)
+
+	Engine.Where("UserId=? and UrlTitle=? and IsBlog=? and IsTrash=? and IsDeleted=?", userId, noteIdOrUrlTitle, true, false, false).Get(&note)
 	return this.GetBlogItem(note)
 }
 
@@ -74,11 +74,8 @@ func (this *BlogService) GetBlogItem(note info.Note) (blog info.BlogItem) {
 // 3/19 博客不是deleted
 func (this *BlogService) ListBlogNotebooks(userId string) []info.Notebook {
 	notebooks := []info.Notebook{}
-	orQ := []bson.M{
-		bson.M{"IsDeleted": false},
-		bson.M{"IsDeleted": bson.M{"$exists": false}},
-	}
-	db.ListByQ(db.Notebooks, bson.M{"UserId": bson.ObjectIdHex(userId), "IsBlog": true, "$or": orQ}, &notebooks)
+	Engine.Where("IsDeleted = false or IsDeleted is null").And("UserId=?", userId).And("IsBlog=?", ture).Find(&notebooks)
+
 	return notebooks
 }
 
@@ -92,7 +89,7 @@ func (this *BlogService) ListBlogs(userId, notebookId string, page, pageSize int
 	}
 
 	// 得到content, 并且每个都要substring
-	noteIds := make([]bson.ObjectId, len(notes))
+	noteIds := make([]int64, len(notes))
 	for i, note := range notes {
 		noteIds[i] = note.NoteId
 	}
@@ -100,7 +97,7 @@ func (this *BlogService) ListBlogs(userId, notebookId string, page, pageSize int
 	// 直接得到noteContents表的abstract
 	// 这里可能是乱序的
 	noteContents := noteService.ListNoteAbstractsByNoteIds(noteIds) // 返回[info.NoteContent]
-	noteContentsMap := make(map[bson.ObjectId]info.NoteContent, len(noteContents))
+	noteContentsMap := make(map[int64]info.NoteContent, len(noteContents))
 	for _, noteContent := range noteContents {
 		noteContentsMap[noteContent.NoteId] = noteContent
 	}
@@ -134,8 +131,9 @@ func (this *BlogService) GetBlogTags(userId string) []info.TagCount {
 	// 得到所有博客
 	tagCounts := []info.TagCount{}
 	// tag不能为空
-	query := bson.M{"UserId": bson.ObjectIdHex(userId), "IsBlog": true, "Tag": bson.M{"$ne": ""}}
-	db.TagCounts.Find(query).Sort("-Count").All(&tagCounts)
+
+	Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("Tag is not null").Sort("-Count").Find(&tagCounts)
+
 	return tagCounts
 }
 
@@ -144,11 +142,12 @@ func (this *BlogService) GetBlogTags(userId string) []info.TagCount {
 func (this *BlogService) ReCountBlogTags(userId string) bool {
 	// 得到所有博客
 	notes := []info.Note{}
-	userIdO := bson.ObjectIdHex(userId)
-	query := bson.M{"UserId": userIdO, "IsTrash": false, "IsDeleted": false, "IsBlog": true}
-	db.ListByQWithFields(db.Notes, query, []string{"Tags"}, &notes)
+	userIdO := userId
 
-	db.DeleteAll(db.TagCounts, bson.M{"UserId": userIdO, "IsBlog": true})
+	Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("IsDeleted=?", false).And("IsTrash=?", false).Cols("Tags").Find(&notes)
+
+	Engine.Where("UserId=?", userIdO).And("IsBlog", true).Delete()
+
 	if notes == nil || len(notes) == 0 {
 		return true
 	}
@@ -166,8 +165,8 @@ func (this *BlogService) ReCountBlogTags(userId string) bool {
 	}
 	// 一个个插入
 	for tag, count := range tagsCount {
-		db.Insert(db.TagCounts,
-			info.TagCount{UserId: userIdO, IsBlog: true, Tag: tag, Count: count})
+		tagCount := info.TagCount{UserId: userIdO, IsBlog: true, Tag: tag, Count: count}
+		Engine.Insert(&tagCount)
 	}
 	return true
 }
@@ -187,10 +186,12 @@ Posts: []
 */
 func (this *BlogService) ListBlogsArchive(userId, notebookId string, year, month int, sortField string, isAsc bool) []info.Archive {
 	//	_, notes := noteService.ListNotes(userId, notebookId, false, 1, 99999, sortField, isAsc, true);
-	q := bson.M{"UserId": bson.ObjectIdHex(userId), "IsBlog": true, "IsTrash": false, "IsDeleted": false}
+	s := Engine.NewSession()
+	s = s.Where("UserId=?", userId).And("IsBlog", true).And("IsTrash", false).And("IsDeleted".false)
 	if notebookId != "" {
-		q["NotebookId"] = bson.ObjectIdHex(notebookId)
+		s = s.And("NotebookId=?", notebookId)
 	}
+
 	if year > 0 {
 		now := time.Now()
 		nextYear := year
@@ -209,18 +210,20 @@ func (this *BlogService) ListBlogsArchive(userId, notebookId string, year, month
 		leftT := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, now.Location())
 		rightT := time.Date(nextYear, time.Month(nextMonth), 1, 0, 0, 0, 0, now.Location())
 		if sortField == "CreatedTime" || sortField == "UpdatedTime" {
-			q[sortField] = bson.M{"$gte": leftT, "$lt": rightT}
+
+			s.And(sortField+" >=?", leftT).And(sortField+" <=?", rightT)
 		} else {
-			q["PublicTime"] = bson.M{"$gte": leftT, "$lt": rightT}
+			s.And("PublicTime >=?", leftT).And("PublicTime <=?", rightT)
 		}
 	}
-
-	sorter := sortField
-	if !isAsc {
-		sorter = "-" + sortField
-	}
 	notes := []info.Note{}
-	db.Notes.Find(q).Sort(sorter).All(&notes)
+	if isAsc {
+		s.Asc(sortField)
+	} else {
+		s.Desc(sortField)
+	}
+
+	s.Find(&notes)
 
 	if notes == nil || len(notes) == 0 {
 		return nil
@@ -290,27 +293,21 @@ func (this *BlogService) ListBlogsArchive(userId, notebookId string, year, month
 // 根据tag搜索博客
 func (this *BlogService) SearchBlogByTags(tags []string, userId string, pageNumber, pageSize int, sortField string, isAsc bool) (pageInfo info.Page, blogs []info.BlogItem) {
 	notes := []info.Note{}
-	skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
+	skipNum := parsePage(pageNumber, pageSize)
 
 	// 不是trash的
-	query := bson.M{"UserId": bson.ObjectIdHex(userId),
-		"IsTrash":   false,
-		"IsDeleted": false,
-		"IsBlog":    true,
-		"Tags":      bson.M{"$all": tags}}
-
-	q := db.Notes.Find(query)
+	if isAsc {
+		Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Asc(sortField).Limit(skipNum, pageSize).Find(&notes)
+	} else {
+		Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Desc(sortField).Limit(skipNum, pageSize).Find(&notes)
+	}
+	note := inf.Note{}
+	count, _ := Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Count(&note)
 
 	// 总记录数
-	count, _ := q.Count()
 	if count == 0 {
 		return
 	}
-
-	q.Sort(sortFieldR).
-		Skip(skipNum).
-		Limit(pageSize).
-		All(&notes)
 
 	blogs = this.notes2BlogItems(notes)
 	pageInfo = info.NewPage(pageNumber, pageSize, count, nil)
@@ -682,7 +679,7 @@ func (this *BlogService) LikeBlog(noteId, userId string) (ok bool, isLike bool) 
 		db.Delete(db.BlogLikes, bson.M{"NoteId": noteIdO, "UserId": userIdO})
 		isLike = false
 	}
-	
+
 	count := db.Count(db.BlogLikes, bson.M{"NoteId": noteIdO})
 	ok = db.UpdateByQI(db.Notes, bson.M{"_id": noteIdO}, bson.M{"LikeNum": count})
 
@@ -1108,16 +1105,16 @@ func (this *BlogService) SortSingles(userId string, singleIds []string) (ok bool
 // 得到用户的博客url
 func (this *BlogService) GetUserBlogUrl(userBlog *info.UserBlog, username string) string {
 	/*
-	if userBlog != nil {
-		if userBlog.Domain != "" && configService.AllowCustomDomain() {
-			return configService.GetUserUrl(userBlog.Domain)
-		} else if userBlog.SubDomain != "" {
-			return configService.GetUserSubUrl(userBlog.SubDomain)
+		if userBlog != nil {
+			if userBlog.Domain != "" && configService.AllowCustomDomain() {
+				return configService.GetUserUrl(userBlog.Domain)
+			} else if userBlog.SubDomain != "" {
+				return configService.GetUserSubUrl(userBlog.SubDomain)
+			}
+			if username == "" {
+				username = userBlog.UserId.Hex()
+			}
 		}
-		if username == "" {
-			username = userBlog.UserId.Hex()
-		}
-	}
 	*/
 	return configService.GetBlogUrl() + "/" + username
 }
@@ -1125,47 +1122,47 @@ func (this *BlogService) GetUserBlogUrl(userBlog *info.UserBlog, username string
 // 得到所有url
 func (this *BlogService) GetBlogUrls(userBlog *info.UserBlog, userInfo *info.User) info.BlogUrls {
 	var indexUrl, postUrl, searchUrl, cateUrl, singleUrl, tagsUrl, archiveUrl, tagPostsUrl string
-	
+
 	/*
-	if userBlog.Domain != "" && configService.AllowCustomDomain() { // http://demo.com
-		// ok
-		indexUrl = configService.GetUserUrl(userBlog.Domain)
-		cateUrl = indexUrl + "/cate"     // /xxxxx
-		postUrl = indexUrl + "/post"     // /xxxxx
-		searchUrl = indexUrl + "/search" // /xxxxx
-		singleUrl = indexUrl + "/single"
-		archiveUrl = indexUrl + "/archives"
-		tagsUrl = indexUrl + "/tags"
-		tagPostsUrl = indexUrl + "/tag"
-	} else if userBlog.SubDomain != "" { // demo.leanote.com
-		indexUrl = configService.GetUserSubUrl(userBlog.SubDomain)
-		cateUrl = indexUrl + "/cate"     // /xxxxx
-		postUrl = indexUrl + "/post"     // /xxxxx
-		searchUrl = indexUrl + "/search" // /xxxxx
-		singleUrl = indexUrl + "/single"
-		archiveUrl = indexUrl + "/archives"
-		tagsUrl = indexUrl + "/tags"
-		tagPostsUrl = indexUrl + "/tag"
-	} else {
-		*/
-		// ok
-		blogUrl := configService.GetBlogUrl() // blog.leanote.com
-		userIdOrEmail := ""
-		if userInfo.Username != "" {
-			userIdOrEmail = userInfo.Username
-		} else if userInfo.Email != "" {
-			userIdOrEmail = userInfo.Email
+		if userBlog.Domain != "" && configService.AllowCustomDomain() { // http://demo.com
+			// ok
+			indexUrl = configService.GetUserUrl(userBlog.Domain)
+			cateUrl = indexUrl + "/cate"     // /xxxxx
+			postUrl = indexUrl + "/post"     // /xxxxx
+			searchUrl = indexUrl + "/search" // /xxxxx
+			singleUrl = indexUrl + "/single"
+			archiveUrl = indexUrl + "/archives"
+			tagsUrl = indexUrl + "/tags"
+			tagPostsUrl = indexUrl + "/tag"
+		} else if userBlog.SubDomain != "" { // demo.leanote.com
+			indexUrl = configService.GetUserSubUrl(userBlog.SubDomain)
+			cateUrl = indexUrl + "/cate"     // /xxxxx
+			postUrl = indexUrl + "/post"     // /xxxxx
+			searchUrl = indexUrl + "/search" // /xxxxx
+			singleUrl = indexUrl + "/single"
+			archiveUrl = indexUrl + "/archives"
+			tagsUrl = indexUrl + "/tags"
+			tagPostsUrl = indexUrl + "/tag"
 		} else {
-			userIdOrEmail = userInfo.UserId.Hex()
-		}
-		indexUrl = blogUrl + "/" + userIdOrEmail
-		cateUrl = blogUrl + "/cate/" + userIdOrEmail        // /username/notebookId
-		postUrl = blogUrl + "/post/" + userIdOrEmail        // /username/xxxxx
-		searchUrl = blogUrl + "/search/" + userIdOrEmail    // blog.leanote.com/search/username
-		singleUrl = blogUrl + "/single/" + userIdOrEmail    // blog.leanote.com/single/username/singleId
-		archiveUrl = blogUrl + "/archives/" + userIdOrEmail // blog.leanote.com/archive/username
-		tagsUrl = blogUrl + "/tags/" + userIdOrEmail
-		tagPostsUrl = blogUrl + "/tag/" + userIdOrEmail // blog.leanote.com/archive/username
+	*/
+	// ok
+	blogUrl := configService.GetBlogUrl() // blog.leanote.com
+	userIdOrEmail := ""
+	if userInfo.Username != "" {
+		userIdOrEmail = userInfo.Username
+	} else if userInfo.Email != "" {
+		userIdOrEmail = userInfo.Email
+	} else {
+		userIdOrEmail = userInfo.UserId.Hex()
+	}
+	indexUrl = blogUrl + "/" + userIdOrEmail
+	cateUrl = blogUrl + "/cate/" + userIdOrEmail        // /username/notebookId
+	postUrl = blogUrl + "/post/" + userIdOrEmail        // /username/xxxxx
+	searchUrl = blogUrl + "/search/" + userIdOrEmail    // blog.leanote.com/search/username
+	singleUrl = blogUrl + "/single/" + userIdOrEmail    // blog.leanote.com/single/username/singleId
+	archiveUrl = blogUrl + "/archives/" + userIdOrEmail // blog.leanote.com/archive/username
+	tagsUrl = blogUrl + "/tags/" + userIdOrEmail
+	tagPostsUrl = blogUrl + "/tag/" + userIdOrEmail // blog.leanote.com/archive/username
 	// }
 
 	return info.BlogUrls{
