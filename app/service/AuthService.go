@@ -59,7 +59,7 @@ func (this *AuthService) Register(email, pwd, fromUserId string) (bool, string) 
 func (this *AuthService) register(user info.User) (bool, string) {
 	if userService.AddUser(user) {
 		// 添加笔记本, 生活, 学习, 工作
-		userId := user.UserId.Hex()
+		userId := user.UserId 
 		notebook := info.Notebook{
 			Seq:    -1,
 			UserId: user.UserId}
@@ -91,12 +91,12 @@ func (this *AuthService) register(user info.User) (bool, string) {
 
 		// 	// 复制笔记
 		// 	for _, noteId := range registerCopyNoteIds {
-		// 		note := noteService.CopySharedNote(noteId, title2Id["life"].Hex(), registerSharedUserId, user.UserId.Hex())
+		// 		note := noteService.CopySharedNote(noteId, title2Id["life"] , registerSharedUserId, user.UserId )
 		// 		//				Log(noteId)
 		// 		//				Log("Copy")
 		// 		//				LogJ(note)
 		// 		noteUpdate := bson.M{"IsBlog": false} // 不要是博客
-		// 		noteService.UpdateNote(user.UserId.Hex(), note.NoteId.Hex(), noteUpdate, -1)
+		// 		noteService.UpdateNote(user.UserId , note.NoteId , noteUpdate, -1)
 		// 	}
 		// }
 
@@ -109,7 +109,7 @@ func (this *AuthService) register(user info.User) (bool, string) {
 			CanComment: true,
 		})
 		// 添加一个单页面
-		blogService.AddOrUpdateSingle(user.UserId.Hex(), "", "About Me", "Hello, I am (^_^)")
+		blogService.AddOrUpdateSingle(user.UserId , "", "About Me", "Hello, I am (^_^)")
 	}
 
 	return true, ""

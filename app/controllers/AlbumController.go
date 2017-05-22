@@ -4,7 +4,6 @@ import (
 	"github.com/revel/revel"
 	//	"encoding/json"
 	"github.com/sddysz/leanote/app/info"
-	"gopkg.in/mgo.v2/bson"
 	//	. "github.com/sddysz/leanote/app/lea"
 	//	"io/ioutil"
 )
@@ -33,10 +32,9 @@ func (c Album) DeleteAlbum(albumId string) revel.Result {
 // add album
 func (c Album) AddAlbum(name string) revel.Result {
 	album := info.Album{
-		AlbumId: bson.NewObjectId(),
-		Name:    name,
-		Seq:     -1,
-		UserId:  c.GetObjectUserId()}
+		Name:   name,
+		Seq:    -1,
+		UserId: c.GetObjectUserId()}
 	re := albumService.AddAlbum(album)
 
 	if re {

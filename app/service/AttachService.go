@@ -36,7 +36,7 @@ func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool,
 
 	if !fromApi {
 		// 增长note's usn
-		noteService.IncrNoteUsn(attach.NoteId.Hex(), userId)
+		noteService.IncrNoteUsn(attach.NoteId , userId)
 	}
 
 	return
@@ -50,7 +50,7 @@ func (this *AttachService) updateNoteAttachNum(noteId int64, addNum int) bool {
 
 	/*
 		note := info.Note{}
-		note = noteService.GetNoteById(noteId.Hex())
+		note = noteService.GetNoteById(noteId )
 		note.AttachNum += addNum
 		if note.AttachNum < 0 {
 			note.AttachNum = 0
@@ -141,7 +141,7 @@ func (this *AttachService) DeleteAttach(attachId, userId string) (bool, string) 
 			attach.Path = strings.TrimLeft(attach.Path, "/")
 			err := os.Remove(revel.BasePath + "/" + attach.Path)
 			if err == nil {
-				// userService.UpdateAttachSize(note.UserId.Hex(), -attach.Size)
+				// userService.UpdateAttachSize(note.UserId , -attach.Size)
 				// 修改note Usn
 				noteService.IncrNoteUsn(attach.NoteId, userId)
 
@@ -169,7 +169,7 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 		return
 	}
 
-	note := noteService.GetNoteById(attach.NoteId.Hex())
+	note := noteService.GetNoteById(attach.NoteId )
 
 	// 判断权限
 
@@ -239,7 +239,7 @@ func (this *AttachService) UpdateOrDeleteAttachApi(noteId, userId string, files 
 	}
 
 	for _, attach := range attachs {
-		fileId := attach.AttachId.Hex()
+		fileId := attach.AttachId 
 		if !nowAttachs[fileId] {
 			// 需要删除的
 			// TODO 权限验证去掉

@@ -1,10 +1,9 @@
 package api
 
 import (
+	"github.com/revel/revel"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"github.com/revel/revel"
-	"gopkg.in/mgo.v2/bson"
 	//	"strconv"
 )
 
@@ -26,9 +25,9 @@ func (c ApiAuth) Login(email, pwd string) revel.Result {
 
 	userInfo, err := authService.Login(email, pwd)
 	if err == nil {
-		token := bson.NewObjectId().Hex()
-		sessionService.SetUserId(token, userInfo.UserId.Hex())
-		return c.RenderJSON(info.AuthOk{Ok: true, Token: token, UserId: userInfo.UserId, Email: userInfo.Email, Username: userInfo.Username})
+
+		sessionService.SetUserId(token, userInfo.UserId)
+		return c.RenderJSON(info.AuthOk{Ok: true, Token: nil, UserId: userInfo.UserId, Email: userInfo.Email, Username: userInfo.Username})
 	} else {
 		// 登录错误, 则错误次数++
 		msg = "wrongUsernameOrPassword"

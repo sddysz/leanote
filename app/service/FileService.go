@@ -244,14 +244,14 @@ func (this *FileService) CopyImage(userId, fileId, toUserId string) (bool, strin
 	// file2 := info.File{}
 	// db.GetByQ(db.Files, bson.M{"UserId": bson.ObjectIdHex(toUserId), "FromFileId": bson.ObjectIdHex(fileId)}, &file2)
 	// if file2.FileId != "" {
-	// 	return true, file2.FileId.Hex()
+	// 	return true, file2.FileId 
 	// }
 
 	// // 复制之
 	// file := info.File{}
 	// db.GetByIdAndUserId(db.Files, fileId, userId, &file)
 
-	// if file.FileId == "" || file.UserId.Hex() != userId {
+	// if file.FileId == "" || file.UserId  != userId {
 	// 	return false, ""
 	// }
 
@@ -280,11 +280,11 @@ func (this *FileService) CopyImage(userId, fileId, toUserId string) (bool, strin
 	// 	FromFileId: file.FileId}
 	// id := bson.NewObjectId()
 	// fileInfo.FileId = id
-	// fileId = id.Hex()
+	// fileId = id 
 	// Ok, _ := this.AddImage(fileInfo, "", toUserId, false)
 
 	// if Ok {
-	// 	return Ok, id.Hex()
+	// 	return Ok, id 
 	// }
 	return false, ""
 }

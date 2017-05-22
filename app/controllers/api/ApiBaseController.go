@@ -2,12 +2,12 @@ package api
 
 import (
 	"github.com/revel/revel"
-	"gopkg.in/mgo.v2/bson"
 	//	"encoding/json"
+	"os"
+
 	"github.com/sddysz/leanote/app/controllers"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"os"
 	//	"fmt"
 	"io/ioutil"
 	//	"fmt"
@@ -99,11 +99,11 @@ func (c ApiBaseContrller) uploadAttach(name string, noteId string) (ok bool, msg
 		fileType = strings.ToLower(ext[1:])
 	}
 	filesize := GetFilesize(toPath)
-	fileInfo := info.Attach{AttachId: bson.NewObjectId(),
+	fileInfo := info.Attach{
 		Name:         filename,
 		Title:        handel.Filename,
-		NoteId:       bson.ObjectIdHex(noteId),
-		UploadUserId: bson.ObjectIdHex(userId),
+		NoteId:       noteId,
+		UploadUserId: userId,
 		Path:         filePath + "/" + filename,
 		Type:         fileType,
 		Size:         filesize}
@@ -113,7 +113,7 @@ func (c ApiBaseContrller) uploadAttach(name string, noteId string) (ok bool, msg
 		return
 	}
 
-	id = fileInfo.AttachId.Hex()
+	id = fileInfo.AttachId
 	return
 }
 
@@ -176,14 +176,14 @@ func (c ApiBaseContrller) upload(name string, noteId string, isAttach bool) (ok 
 	fileUrlPath += "/" + filename
 
 	// File
-	fileInfo := info.File{FileId: bson.NewObjectId(),
+	fileInfo := info.File{
 		Name:  filename,
 		Title: handel.Filename,
 		Path:  fileUrlPath,
 		Size:  filesize}
 	ok, msg = fileService.AddImage(fileInfo, "", c.getUserId(), true)
 	if ok {
-		id = fileInfo.FileId.Hex()
+		id = fileInfo.FileId
 	}
 	return
 }

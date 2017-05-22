@@ -1,10 +1,8 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // 找回密码
@@ -53,10 +51,10 @@ func (this *PwdService) UpdatePwd(token, pwd string) (bool, string) {
 	}
 
 	// 修改密码之
-	ok = db.UpdateByQField(db.Users, bson.M{"_id": tokenInfo.UserId}, "Pwd", passwd)
+	//ok = db.UpdateByQField(db.Users, bson.M{"_id": tokenInfo.UserId}, "Pwd", passwd)
 
 	// 删除token
-	tokenService.DeleteToken(tokenInfo.UserId.Hex(), info.TokenPwd)
+	tokenService.DeleteToken(tokenInfo.UserId, info.TokenPwd)
 
-	return ok, ""
+	return true, ""
 }

@@ -59,7 +59,7 @@ func (this *BlogService) GetBlogItem(note info.Note) (blog info.BlogItem) {
 	}
 
 	// 内容
-	noteContent := noteService.GetNoteContent(note.NoteId.Hex(), note.UserId.Hex())
+	noteContent := noteService.GetNoteContent(note.NoteId , note.UserId )
 
 	// 组装成blogItem
 	blog = info.BlogItem{note, noteContent.Abstract, noteContent.Content, false, info.User{}}
@@ -531,7 +531,7 @@ func (this *BlogService) fixUserBlog(userBlog *info.UserBlog) {
 	if userBlog.ThemeId == "" {
 		userBlog.ThemePath = themeService.GetDefaultThemePath(userBlog.Style)
 	} else {
-		userBlog.ThemePath = themeService.GetThemePath(userBlog.UserId.Hex(), userBlog.ThemeId.Hex())
+		userBlog.ThemePath = themeService.GetThemePath(userBlog.UserId , userBlog.ThemeId )
 	}*/
 }
 func (this *BlogService) GetUserBlog(userId string) info.UserBlog {
@@ -635,7 +635,7 @@ func (this *BlogService) ListLikedUsers(noteId string, isAll bool) ([]info.UserA
 
 		users := make([]info.UserAndBlog, len(likes))
 		for i, like := range likes {
-			users[i] = userMap[like.UserId.Hex()]
+			users[i] = userMap[like.UserId ]
 		}
 
 		return users, count > pageSize*/
@@ -671,7 +671,7 @@ func (this *BlogService) LikeBlog(noteId, userId string) (ok bool, isLike bool) 
 	// }
 	// // 判断是否点过赞, 如果点过那么取消点赞
 	// note := noteService.GetNoteById(noteId)
-	// if !note.IsBlog /*|| note.UserId.Hex() == userId */ {
+	// if !note.IsBlog /*|| note.UserId  == userId */ {
 	// 	return
 	// }
 
@@ -730,7 +730,7 @@ func (this *BlogService) Comment(noteId, toCommentId, userId, content string) (b
 	// 	db.Update(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId)}, bson.M{"$inc": bson.M{"CommentNum": 1}})
 	// }
 
-	// if userId != note.UserId.Hex() || toCommentId != "" {
+	// if userId != note.UserId  || toCommentId != "" {
 	// 	go func() {
 	// 		this.sendEmail(note, comment2, userId, content)
 	// 	}()
@@ -744,12 +744,12 @@ func (this *BlogService) Comment(noteId, toCommentId, userId, content string) (b
 func (this *BlogService) sendEmail(note info.Note, comment info.BlogComment, userId, content string) {
 	emailService.SendCommentEmail(note, comment, userId, content)
 	/*
-		toUserId := note.UserId.Hex()
+		toUserId := note.UserId 
 		// title := "评论提醒"
 
 		// 表示回复回复的内容, 那么发送给之前回复的
 		if comment.CommentId != "" {
-			toUserId = comment.UserId.Hex()
+			toUserId = comment.UserId 
 		}
 		toUserInfo := userService.GetUserInfo(toUserId)
 		sendUserInfo := userService.GetUserInfo(userId)
@@ -757,14 +757,14 @@ func (this *BlogService) sendEmail(note info.Note, comment info.BlogComment, use
 		subject := note.Title + " 收到 " + sendUserInfo.Username + " 的评论";
 		if comment.CommentId != "" {
 			subject = "您在 " + note.Title + " 发表的评论收到 " + sendUserInfo.Username;
-			if userId == note.UserId.Hex() {
+			if userId == note.UserId  {
 				subject += "(作者)";
 			}
 			subject += " 的评论";
 		}
 
 		body := "{header}<b>评论内容</b>: <br /><blockquote>" + content + "</blockquote>";
-		href := "http://"+ configService.GetBlogDomain() + "/view/" + note.NoteId.Hex()
+		href := "http://"+ configService.GetBlogDomain() + "/view/" + note.NoteId 
 		body += "<br /><b>博客链接</b>: <a href='" + href + "'>" + href + "</a>{footer}";
 
 		emailService.SendEmail(toUserInfo.Email, subject, body)
@@ -786,7 +786,7 @@ func (this *BlogService) DeleteComment(noteId, commentId, userId string) bool {
 	// 	return false
 	// }
 
-	// if userId == configService.GetAdminUserId() || note.UserId.Hex() == userId || comment.UserId.Hex() == userId {
+	// if userId == configService.GetAdminUserId() || note.UserId  == userId || comment.UserId  == userId {
 	// 	if db.Delete(db.BlogComments, bson.M{"_id": bson.ObjectIdHex(commentId)}) {
 	// 		// 评论-1
 	// 		db.Update(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId)}, bson.M{"$inc": bson.M{"CommentNum": -1}})
@@ -1093,7 +1093,7 @@ func (this *BlogService) AddOrUpdateSingle(userId, singleId, title, content stri
 	// ok = db.Insert(db.BlogSingles, page)
 
 	// // 还要修改UserBlog中的Singles
-	// this.updateBlogSingles(userId, false, true, page.SingleId.Hex(), title, page.UrlTitle)
+	// this.updateBlogSingles(userId, false, true, page.SingleId , title, page.UrlTitle)
 
 	return
 }
@@ -1133,7 +1133,7 @@ func (this *BlogService) GetUserBlogUrl(userBlog *info.UserBlog, username string
 				return configService.GetUserSubUrl(userBlog.SubDomain)
 			}
 			if username == "" {
-				username = userBlog.UserId.Hex()
+				username = userBlog.UserId 
 			}
 		}
 	*/
@@ -1174,7 +1174,7 @@ func (this *BlogService) GetBlogUrls(userBlog *info.UserBlog, userInfo *info.Use
 	// } else if userInfo.Email != "" {
 	// 	userIdOrEmail = userInfo.Email
 	// } else {
-	// 	userIdOrEmail = userInfo.UserId.Hex()
+	// 	userIdOrEmail = userInfo.UserId 
 	// }
 	// indexUrl = blogUrl + "/" + userIdOrEmail
 	// cateUrl = blogUrl + "/cate/" + userIdOrEmail        // /username/notebookId

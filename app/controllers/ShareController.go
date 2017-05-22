@@ -90,7 +90,7 @@ func (c Share) ListNoteShareUserInfo(noteId string) revel.Result {
 	c.ViewArgs["noteOrNotebookShareGroupInfos"] = shareService.GetNoteShareGroups(noteId, c.GetUserId())
 
 	c.ViewArgs["isNote"] = true
-	c.ViewArgs["noteOrNotebookId"] = note.NoteId.Hex()
+	c.ViewArgs["noteOrNotebookId"] = note.NoteId 
 	c.ViewArgs["title"] = note.Title
 
 	return c.RenderTemplate("share/note_notebook_share_user_infos.html")
@@ -105,7 +105,7 @@ func (c Share) ListNotebookShareUserInfo(notebookId string) revel.Result {
 	LogJ(c.ViewArgs["noteOrNotebookShareGroupInfos"])
 
 	c.ViewArgs["isNote"] = false
-	c.ViewArgs["noteOrNotebookId"] = notebook.NotebookId.Hex()
+	c.ViewArgs["noteOrNotebookId"] = notebook.NotebookId 
 	c.ViewArgs["title"] = notebook.Title
 
 	return c.RenderTemplate("share/note_notebook_share_user_infos.html")

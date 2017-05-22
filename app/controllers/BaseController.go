@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
+
+	"github.com/revel/revel"
 	"github.com/sddysz/leanote/app/info"
 	"github.com/sddysz/leanote/app/lea/i18n"
-	"github.com/revel/revel"
-	"gopkg.in/mgo.v2/bson"
 	//	. "github.com/sddysz/leanote/app/lea"
 	//	"io/ioutil"
 	//	"fmt"
@@ -37,10 +37,10 @@ func (c BaseController) HasLogined() bool {
 	return c.GetUserId() != ""
 }
 
-func (c BaseController) GetObjectUserId() bson.ObjectId {
+func (c BaseController) GetObjectUserId() int64 {
 	userId := c.GetUserId()
 	if userId != "" {
-		return bson.ObjectIdHex(userId)
+		return userId
 	}
 	return ""
 }
@@ -106,8 +106,8 @@ func (c BaseController) GetSession(key string) string {
 	return v
 }
 func (c BaseController) SetSession(userInfo info.User) {
-	if userInfo.UserId.Hex() != "" {
-		c.Session["UserId"] = userInfo.UserId.Hex()
+	if userInfo.UserId != "" {
+		c.Session["UserId"] = userInfo.UserId
 		c.Session["Email"] = userInfo.Email
 		c.Session["Username"] = userInfo.Username
 		c.Session["UsernameRaw"] = userInfo.UsernameRaw
@@ -229,7 +229,7 @@ func (c BaseController) RenderTemplateStr(templatePath string) string {
 	}
 
 	tpl := &revel.RenderTemplateResult{
-		Template:   template,
+		Template: template,
 		ViewArgs: c.ViewArgs, // 把args给它
 	}
 

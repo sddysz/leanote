@@ -4,12 +4,12 @@ import (
 	"github.com/revel/revel"
 	//	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
 	"github.com/sddysz/leanote/app/lea/netutil"
-	"gopkg.in/mgo.v2/bson"
-	"io/ioutil"
-	"os"
 	//	"strconv"
 	"strings"
 )
@@ -40,7 +40,7 @@ func (c File) PasteImage(noteId string) revel.Result {
 		userId := c.GetUserId()
 		note := noteService.GetNoteById(noteId)
 		if note.UserId != "" {
-			noteUserId := note.UserId.Hex()
+			noteUserId := note.UserId
 			if noteUserId != userId {
 				// 是否是有权限协作的
 				if shareService.HasUpdatePerm(noteUserId, userId, noteId) {
@@ -181,10 +181,6 @@ func (c File) uploadImage(from, albumId string) (re info.Re) {
 		Path:  fileUrlPath,
 		Size:  filesize}
 
-	id := bson.NewObjectId()
-	fileInfo.FileId = id
-	fileId = id.Hex()
-
 	if from == "logo" || from == "blogLogo" {
 		fileId = fileUrlPath
 	}
@@ -266,10 +262,9 @@ func (c File) CopyHttpImage(src string) revel.Result {
 		Path:  fileUrlPath + "/" + filename,
 		Size:  filesize}
 
-	id := bson.NewObjectId()
 	fileInfo.FileId = id
 
-	re.Id = id.Hex()
+	re.Id = id
 	//	re.Item = fileInfo.Path
 	re.Ok, re.Msg = fileService.AddImage(fileInfo, "", c.GetUserId(), true)
 

@@ -3,14 +3,14 @@ package controllers
 import (
 	"github.com/revel/revel"
 	//	"encoding/json"
-	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sddysz/leanote/app/info"
+	. "github.com/sddysz/leanote/app/lea"
 	//	"github.com/sddysz/leanote/app/types"
 	//	"io/ioutil"
 	"fmt"
@@ -29,7 +29,7 @@ func (c Note) Index(noteId, online string) revel.Result {
 	c.SetLocale()
 	userInfo := c.GetUserAndBlogUrl()
 
-	userId := userInfo.UserId.Hex()
+	userId := userInfo.UserId
 
 	// 没有登录
 	if userId == "" {
@@ -54,26 +54,26 @@ func (c Note) Index(noteId, online string) revel.Result {
 			note := noteService.GetNoteById(noteId)
 
 			if note.NoteId != "" {
-				var noteOwner = note.UserId.Hex()
+				var noteOwner = note.UserId
 				noteContent = noteService.GetNoteContent(noteId, noteOwner)
 
 				hasRightNoteId = true
 				c.ViewArgs["curNoteId"] = noteId
-				c.ViewArgs["curNotebookId"] = note.NotebookId.Hex()
+				c.ViewArgs["curNotebookId"] = note.NotebookId
 
 				// 打开的是共享的笔记, 那么判断是否是共享给我的默认笔记
 				if noteOwner != c.GetUserId() {
 					if shareService.HasReadPerm(noteOwner, c.GetUserId(), noteId) {
 						// 不要获取notebook下的笔记
 						// 在前端下发请求
-						c.ViewArgs["curSharedNoteNotebookId"] = note.NotebookId.Hex()
+						c.ViewArgs["curSharedNoteNotebookId"] = note.NotebookId
 						c.ViewArgs["curSharedUserId"] = noteOwner
 						// 没有读写权限
 					} else {
 						hasRightNoteId = false
 					}
 				} else {
-					_, notes = noteService.ListNotes(c.GetUserId(), note.NotebookId.Hex(), false, c.GetPage(), 50, defaultSortField, false, false)
+					_, notes = noteService.ListNotes(c.GetUserId(), note.NotebookId, false, c.GetPage(), 50, defaultSortField, false, false)
 
 					// 如果指定了某笔记, 则该笔记放在首位
 					lenNotes := len(notes)
@@ -82,7 +82,7 @@ func (c Note) Index(noteId, online string) revel.Result {
 						notes2[0] = note
 						i := 1
 						for _, note := range notes {
-							if note.NoteId.Hex() != noteId {
+							if note.NoteId != noteId {
 								if i == lenNotes { // 防止越界
 									break
 								}
@@ -105,8 +105,8 @@ func (c Note) Index(noteId, online string) revel.Result {
 		if !hasRightNoteId {
 			_, notes = noteService.ListNotes(c.GetUserId(), "", false, c.GetPage(), 50, defaultSortField, false, false)
 			if len(notes) > 0 {
-				noteContent = noteService.GetNoteContent(notes[0].NoteId.Hex(), userId)
-				c.ViewArgs["curNoteId"] = notes[0].NoteId.Hex()
+				noteContent = noteService.GetNoteContent(notes[0].NoteId, userId)
+				c.ViewArgs["curNoteId"] = notes[0].NoteId
 			}
 		}
 	}
@@ -180,14 +180,14 @@ func (c Note) UpdateNoteOrContent(noteOrContent info.NoteOrContent) revel.Result
 		//		myUserId := userId
 		// 为共享新建?
 		if noteOrContent.FromUserId != "" {
-			userId = bson.ObjectIdHex(noteOrContent.FromUserId)
+			userId = noteOrContent.FromUserId
 		}
 
 		note := info.Note{UserId: userId,
-			NoteId:     bson.ObjectIdHex(noteOrContent.NoteId),
-			NotebookId: bson.ObjectIdHex(noteOrContent.NotebookId),
+			NoteId:     noteOrContent.NoteId,
+			NotebookId: noteOrContent.NotebookId,
 			Title:      noteOrContent.Title,
-			Src: noteOrContent.Src, // 来源
+			Src:        noteOrContent.Src, // 来源
 			Tags:       strings.Split(noteOrContent.Tags, ","),
 			Desc:       noteOrContent.Desc,
 			ImgSrc:     noteOrContent.ImgSrc,
@@ -204,49 +204,49 @@ func (c Note) UpdateNoteOrContent(noteOrContent info.NoteOrContent) revel.Result
 		return c.RenderJSON(note)
 	}
 
-	noteUpdate := bson.M{}
-	needUpdateNote := false
+	// noteUpdate := bson.M{}
+	// needUpdateNote := false
 
-	// Desc前台传来
-	if c.Has("Desc") {
-		needUpdateNote = true
-		noteUpdate["Desc"] = noteOrContent.Desc
-	}
-	if c.Has("ImgSrc") {
-		needUpdateNote = true
-		noteUpdate["ImgSrc"] = noteOrContent.ImgSrc
-	}
-	if c.Has("Title") {
-		needUpdateNote = true
-		noteUpdate["Title"] = noteOrContent.Title
-	}
+	// // Desc前台传来
+	// if c.Has("Desc") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["Desc"] = noteOrContent.Desc
+	// }
+	// if c.Has("ImgSrc") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["ImgSrc"] = noteOrContent.ImgSrc
+	// }
+	// if c.Has("Title") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["Title"] = noteOrContent.Title
+	// }
 
-	if c.Has("Tags") {
-		needUpdateNote = true
-		noteUpdate["Tags"] = strings.Split(noteOrContent.Tags, ",")
-	}
+	// if c.Has("Tags") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["Tags"] = strings.Split(noteOrContent.Tags, ",")
+	// }
 
 	// web端不控制
-	if needUpdateNote {
-		noteService.UpdateNote(c.GetUserId(),
-			noteOrContent.NoteId, noteUpdate, -1)
-	}
+	// if needUpdateNote {
+	// 	noteService.UpdateNote(c.GetUserId(),
+	// 		noteOrContent.NoteId, noteUpdate, -1)
+	// }
 
 	//-------------
-	afterContentUsn := 0
-	contentOk := false
-	contentMsg := ""
-	if c.Has("Content") {
-		//		noteService.UpdateNoteContent(noteOrContent.UserId, c.GetUserId(),
-		//			noteOrContent.NoteId, noteOrContent.Content, noteOrContent.Abstract)
-		contentOk, contentMsg, afterContentUsn = noteService.UpdateNoteContent(c.GetUserId(),
-			noteOrContent.NoteId, noteOrContent.Content, noteOrContent.Abstract,
-			needUpdateNote, -1, time.Now())
-	}
+	// afterContentUsn := 0
+	// contentOk := false
+	// contentMsg := ""
+	// if c.Has("Content") {
+	// 	//		noteService.UpdateNoteContent(noteOrContent.UserId, c.GetUserId(),
+	// 	//			noteOrContent.NoteId, noteOrContent.Content, noteOrContent.Abstract)
+	// 	contentOk, contentMsg, afterContentUsn = noteService.UpdateNoteContent(c.GetUserId(),
+	// 		noteOrContent.NoteId, noteOrContent.Content, noteOrContent.Abstract,
+	// 		needUpdateNote, -1, time.Now())
+	// }
 
-	Log(afterContentUsn)
-	Log(contentOk)
-	Log(contentMsg)
+	// Log(afterContentUsn)
+	// Log(contentOk)
+	// Log(contentMsg)
 
 	return c.RenderJSON(true)
 }
@@ -334,7 +334,7 @@ func (c Note) ToPdf(noteId, appKey string) revel.Result {
 		return c.RenderText("no note")
 	}
 
-	noteUserId := note.UserId.Hex()
+	noteUserId := note.UserId
 	content := noteService.GetNoteContent(noteId, noteUserId)
 	userInfo := userService.GetUserInfo(noteUserId)
 
@@ -416,7 +416,7 @@ func (c Note) ExportPdf(noteId string) revel.Result {
 		return c.RenderText("error")
 	}
 
-	noteUserId := note.UserId.Hex()
+	noteUserId := note.UserId
 	// 是否有权限
 	if noteUserId != userId {
 		// 是否是有权限协作的

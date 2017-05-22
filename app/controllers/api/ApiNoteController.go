@@ -3,14 +3,14 @@ package api
 import (
 	"github.com/revel/revel"
 	//	"encoding/json"
-	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"os/exec"
+
+	"github.com/sddysz/leanote/app/info"
+	. "github.com/sddysz/leanote/app/lea"
 	// "strings"
-	"time"
 	"regexp"
+	"time"
 	//	"github.com/sddysz/leanote/app/types"
 	//	"io/ioutil"
 	//	"fmt"
@@ -58,7 +58,7 @@ func (c ApiNote) GetSyncNotes(afterUsn, maxEntry int) revel.Result {
 // 得到笔记本下的笔记
 // [OK]
 func (c ApiNote) GetNotes(notebookId string) revel.Result {
-	if notebookId != "" && !bson.IsObjectIdHex(notebookId) {
+	if notebookId != "" && !notebookId {
 		re := info.NewApiRe()
 		re.Msg = "notebookIdInvalid"
 		return c.RenderJSON(re)
@@ -124,7 +124,7 @@ func (c ApiNote) GetTrashNotes() revel.Result {
 }
 */
 func (c ApiNote) GetNote(noteId string) revel.Result {
-	if !bson.IsObjectIdHex(noteId) {
+	if !noteId {
 		re := info.NewApiRe()
 		re.Msg = "noteIdInvalid"
 		return c.RenderJSON(re)
@@ -168,22 +168,22 @@ func (c ApiNote) fixPostNotecontent(noteOrContent *info.ApiNote) {
 				if !file.IsAttach {
 					// <img src="https://"
 					// ![](http://demo.leanote.top/api/file/getImage?fileId=5863219465b68e4fd5000001)
-					reg, _ := regexp.Compile(`https*://[^/]*?/api/file/getImage\?fileId=`+file.LocalFileId)
+					reg, _ := regexp.Compile(`https*://[^/]*?/api/file/getImage\?fileId=` + file.LocalFileId)
 					// Log(reg)
-					noteOrContent.Content = reg.ReplaceAllString(noteOrContent.Content, `/api/file/getImage?fileId=`+file.FileId)  
+					noteOrContent.Content = reg.ReplaceAllString(noteOrContent.Content, `/api/file/getImage?fileId=`+file.FileId)
 
 					// // "http://a.com/api/file/getImage?fileId=localId" => /api/file/getImage?fileId=serverId
-					// noteOrContent.Content = strings.Replace(noteOrContent.Content, 
-					// 	baseUrl + "/api/file/getImage?fileId="+file.LocalFileId, 
+					// noteOrContent.Content = strings.Replace(noteOrContent.Content,
+					// 	baseUrl + "/api/file/getImage?fileId="+file.LocalFileId,
 					// 	"/api/file/getImage?fileId="+file.FileId, -1)
 				} else {
-					reg, _ := regexp.Compile(`https*://[^/]*?/api/file/getAttach\?fileId=`+file.LocalFileId)
+					reg, _ := regexp.Compile(`https*://[^/]*?/api/file/getAttach\?fileId=` + file.LocalFileId)
 					Log(reg)
-					noteOrContent.Content = reg.ReplaceAllString(noteOrContent.Content, `/api/file/getAttach?fileId=`+file.FileId)  
+					noteOrContent.Content = reg.ReplaceAllString(noteOrContent.Content, `/api/file/getAttach?fileId=`+file.FileId)
 					/*
-					noteOrContent.Content = strings.Replace(noteOrContent.Content, 
-						baseUrl + "/api/file/getAttach?fileId="+file.LocalFileId, 
-						"/api/file/getAttach?fileId="+file.FileId, -1)
+						noteOrContent.Content = strings.Replace(noteOrContent.Content,
+							baseUrl + "/api/file/getAttach?fileId="+file.LocalFileId,
+							"/api/file/getAttach?fileId="+file.FileId, -1)
 					*/
 				}
 			}
@@ -213,7 +213,7 @@ func (c ApiNote) GetNoteContent(noteId string) revel.Result {
 // 添加笔记
 // [OK]
 func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
-	userId := bson.ObjectIdHex(c.getUserId())
+	userId := c.getUserId()
 	re := info.NewRe()
 	myUserId := userId
 	// 为共享新建?
@@ -234,12 +234,11 @@ func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
 		}
 	*/
 	//	return c.RenderJSON(re)
-	if noteOrContent.NotebookId == "" || !bson.IsObjectIdHex(noteOrContent.NotebookId) {
+	if noteOrContent.NotebookId == "" || !noteOrContent.NotebookId {
 		re.Msg = "notebookIdNotExists"
 		return c.RenderJSON(re)
 	}
 
-	noteId := bson.NewObjectId()
 	// TODO 先上传图片/附件, 如果不成功, 则返回false
 	//
 	attachNum := 0
@@ -248,7 +247,7 @@ func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
 			if file.HasBody {
 				if file.LocalFileId != "" {
 					// FileDatas[54c7ae27d98d0329dd000000]
-					ok, msg, fileId := c.upload("FileDatas["+file.LocalFileId+"]", noteId.Hex(), file.IsAttach)
+					ok, msg, fileId := c.upload("FileDatas["+file.LocalFileId+"]", noteId, file.IsAttach)
 
 					if !ok {
 						re.Ok = false
@@ -285,8 +284,7 @@ func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
 	//	return c.RenderJSON(re)
 
 	note := info.Note{UserId: userId,
-		NoteId:     noteId,
-		NotebookId: bson.ObjectIdHex(noteOrContent.NotebookId),
+		NotebookId: noteOrContent.NotebookId,
 		Title:      noteOrContent.Title,
 		Tags:       noteOrContent.Tags,
 		Desc:       noteOrContent.Desc,
@@ -298,7 +296,6 @@ func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
 		UpdatedTime: noteOrContent.UpdatedTime,
 	}
 	noteContent := info.NoteContent{NoteId: note.NoteId,
-		UserId:      userId,
 		IsBlog:      note.IsBlog,
 		Content:     noteOrContent.Content,
 		Abstract:    noteOrContent.Abstract,
@@ -322,7 +319,7 @@ func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
 	}
 
 	// 添加需要返回的
-	noteOrContent.NoteId = note.NoteId.Hex()
+	noteOrContent.NoteId = note.NoteId
 	noteOrContent.Usn = note.Usn
 	noteOrContent.CreatedTime = note.CreatedTime
 	noteOrContent.UpdatedTime = note.UpdatedTime
@@ -338,208 +335,209 @@ func (c ApiNote) AddNote(noteOrContent info.ApiNote) revel.Result {
 // 更新笔记
 // [OK]
 func (c ApiNote) UpdateNote(noteOrContent info.ApiNote) revel.Result {
-	re := info.NewReUpdate()
+	// re := info.NewReUpdate()
 
-	noteUpdate := bson.M{}
-	needUpdateNote := false
+	// noteUpdate := bson.M{}
+	// needUpdateNote := false
 
-	noteId := noteOrContent.NoteId
+	// noteId := noteOrContent.NoteId
 
-	if noteOrContent.NoteId == "" {
-		re.Msg = "noteIdNotExists"
-		return c.RenderJSON(re)
-	}
+	// if noteOrContent.NoteId == "" {
+	// 	re.Msg = "noteIdNotExists"
+	// 	return c.RenderJSON(re)
+	// }
 
-	if noteOrContent.Usn <= 0 {
-		re.Msg = "usnNotExists"
-		return c.RenderJSON(re)
-	}
+	// if noteOrContent.Usn <= 0 {
+	// 	re.Msg = "usnNotExists"
+	// 	return c.RenderJSON(re)
+	// }
 
-	//	Log("_____________")
-	//	LogJ(noteOrContent)
-	/*
-		LogJ(c.Params.Files)
-		LogJ(c.Request.Header)
-		LogJ(c.Params.Values)
-	*/
+	// //	Log("_____________")
+	// //	LogJ(noteOrContent)
+	// /*
+	// 	LogJ(c.Params.Files)
+	// 	LogJ(c.Request.Header)
+	// 	LogJ(c.Params.Values)
+	// */
 
-	// 先判断USN的问题, 因为很可能添加完附件后, 会有USN冲突, 这时附件就添错了
-	userId := c.getUserId()
-	note := noteService.GetNote(noteId, userId)
-	if note.NoteId == "" {
-		re.Msg = "notExists"
-		return c.RenderJSON(re)
-	}
-	if note.Usn != noteOrContent.Usn {
-		re.Msg = "conflict"
-		Log("conflict")
-		return c.RenderJSON(re)
-	}
-	Log("没有冲突")
+	// // 先判断USN的问题, 因为很可能添加完附件后, 会有USN冲突, 这时附件就添错了
+	// userId := c.getUserId()
+	// note := noteService.GetNote(noteId, userId)
+	// if note.NoteId == "" {
+	// 	re.Msg = "notExists"
+	// 	return c.RenderJSON(re)
+	// }
+	// if note.Usn != noteOrContent.Usn {
+	// 	re.Msg = "conflict"
+	// 	Log("conflict")
+	// 	return c.RenderJSON(re)
+	// }
+	// Log("没有冲突")
 
-	// 如果传了files
-	// TODO 测试
-	/*
-		for key, v := range c.Params.Values {
-			Log(key)
-			Log(v)
-		}
-	*/
-	//	Log(c.Has("Files[0]"))
-	if c.Has("Files[0][LocalFileId]") {
-		//		LogJ(c.Params.Files)
-		if noteOrContent.Files != nil && len(noteOrContent.Files) > 0 {
-			for i, file := range noteOrContent.Files {
-				if file.HasBody {
-					if file.LocalFileId != "" {
-						// FileDatas[54c7ae27d98d0329dd000000]
-						ok, msg, fileId := c.upload("FileDatas["+file.LocalFileId+"]", noteId, file.IsAttach)
-						if !ok {
-							Log("upload file error")
-							re.Ok = false
-							if msg == "" {
-								re.Msg = "fileUploadError"
-							} else {
-								re.Msg = msg
-							}
-							return c.RenderJSON(re)
-						} else {
-							// 建立映射
-							file.FileId = fileId
-							noteOrContent.Files[i] = file
-						}
-					} else {
-						return c.RenderJSON(re)
-					}
-				}
-			}
-		}
+	// // 如果传了files
+	// // TODO 测试
+	// /*
+	// 	for key, v := range c.Params.Values {
+	// 		Log(key)
+	// 		Log(v)
+	// 	}
+	// */
+	// //	Log(c.Has("Files[0]"))
+	// if c.Has("Files[0][LocalFileId]") {
+	// 	//		LogJ(c.Params.Files)
+	// 	if noteOrContent.Files != nil && len(noteOrContent.Files) > 0 {
+	// 		for i, file := range noteOrContent.Files {
+	// 			if file.HasBody {
+	// 				if file.LocalFileId != "" {
+	// 					// FileDatas[54c7ae27d98d0329dd000000]
+	// 					ok, msg, fileId := c.upload("FileDatas["+file.LocalFileId+"]", noteId, file.IsAttach)
+	// 					if !ok {
+	// 						Log("upload file error")
+	// 						re.Ok = false
+	// 						if msg == "" {
+	// 							re.Msg = "fileUploadError"
+	// 						} else {
+	// 							re.Msg = msg
+	// 						}
+	// 						return c.RenderJSON(re)
+	// 					} else {
+	// 						// 建立映射
+	// 						file.FileId = fileId
+	// 						noteOrContent.Files[i] = file
+	// 					}
+	// 				} else {
+	// 					return c.RenderJSON(re)
+	// 				}
+	// 			}
+	// 		}
+	// 	}
 
-		//		Log("after upload")
-		//		LogJ(noteOrContent.Files)
+	// 	//		Log("after upload")
+	// 	//		LogJ(noteOrContent.Files)
 
-	}
+	// }
 
-	// 移到外面来, 删除最后一个file时也要处理, 不然总删不掉
-	// 附件问题, 根据Files, 有些要删除的, 只留下这些
-	attachService.UpdateOrDeleteAttachApi(noteId, userId, noteOrContent.Files)
+	// // 移到外面来, 删除最后一个file时也要处理, 不然总删不掉
+	// // 附件问题, 根据Files, 有些要删除的, 只留下这些
+	// attachService.UpdateOrDeleteAttachApi(noteId, userId, noteOrContent.Files)
 
-	// Desc前台传来
-	if c.Has("Desc") {
-		needUpdateNote = true
-		noteUpdate["Desc"] = noteOrContent.Desc
-	}
-	/*
-		if c.Has("ImgSrc") {
-			needUpdateNote = true
-			noteUpdate["ImgSrc"] = noteOrContent.ImgSrc
-		}
-	*/
-	if c.Has("Title") {
-		needUpdateNote = true
-		noteUpdate["Title"] = noteOrContent.Title
-	}
-	if c.Has("IsTrash") {
-		needUpdateNote = true
-		noteUpdate["IsTrash"] = noteOrContent.IsTrash
-	}
+	// // Desc前台传来
+	// if c.Has("Desc") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["Desc"] = noteOrContent.Desc
+	// }
+	// /*
+	// 	if c.Has("ImgSrc") {
+	// 		needUpdateNote = true
+	// 		noteUpdate["ImgSrc"] = noteOrContent.ImgSrc
+	// 	}
+	// */
+	// if c.Has("Title") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["Title"] = noteOrContent.Title
+	// }
+	// if c.Has("IsTrash") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["IsTrash"] = noteOrContent.IsTrash
+	// }
 
-	// 是否是博客
-	if c.Has("IsBlog") {
-		needUpdateNote = true
-		noteUpdate["IsBlog"] = noteOrContent.IsBlog
-	}
+	// // 是否是博客
+	// if c.Has("IsBlog") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["IsBlog"] = noteOrContent.IsBlog
+	// }
 
-	/*
-		Log(c.Has("tags[0]"))
-		Log(c.Has("Tags[]"))
-		for key, v := range c.Params.Values {
-			Log(key)
-			Log(v)
-		}
-	*/
+	// /*
+	// 	Log(c.Has("tags[0]"))
+	// 	Log(c.Has("Tags[]"))
+	// 	for key, v := range c.Params.Values {
+	// 		Log(key)
+	// 		Log(v)
+	// 	}
+	// */
 
-	if c.Has("Tags[0]") {
-		needUpdateNote = true
-		noteUpdate["Tags"] = noteOrContent.Tags
-	}
+	// if c.Has("Tags[0]") {
+	// 	needUpdateNote = true
+	// 	noteUpdate["Tags"] = noteOrContent.Tags
+	// }
 
-	if c.Has("NotebookId") {
-		if bson.IsObjectIdHex(noteOrContent.NotebookId) {
-			needUpdateNote = true
-			noteUpdate["NotebookId"] = bson.ObjectIdHex(noteOrContent.NotebookId)
-		}
-	}
+	// if c.Has("NotebookId") {
+	// 	if bson.IsObjectIdHex(noteOrContent.NotebookId) {
+	// 		needUpdateNote = true
+	// 		noteUpdate["NotebookId"] = bson.ObjectIdHex(noteOrContent.NotebookId)
+	// 	}
+	// }
 
-	if c.Has("Content") {
-		// 通过内容得到Desc, 如果有Abstract, 则用Abstract生成Desc
-		if noteOrContent.Abstract == "" {
-			noteUpdate["Desc"] = SubStringHTMLToRaw(noteOrContent.Content, 200)
-		} else {
-			noteUpdate["Desc"] = SubStringHTMLToRaw(noteOrContent.Abstract, 200)
-		}
-	}
+	// if c.Has("Content") {
+	// 	// 通过内容得到Desc, 如果有Abstract, 则用Abstract生成Desc
+	// 	if noteOrContent.Abstract == "" {
+	// 		noteUpdate["Desc"] = SubStringHTMLToRaw(noteOrContent.Content, 200)
+	// 	} else {
+	// 		noteUpdate["Desc"] = SubStringHTMLToRaw(noteOrContent.Abstract, 200)
+	// 	}
+	// }
 
-	noteUpdate["UpdatedTime"] = noteOrContent.UpdatedTime
+	// noteUpdate["UpdatedTime"] = noteOrContent.UpdatedTime
 
-	afterNoteUsn := 0
-	noteOk := false
-	noteMsg := ""
-	if needUpdateNote {
-		noteOk, noteMsg, afterNoteUsn = noteService.UpdateNote(c.getUserId(), noteOrContent.NoteId, noteUpdate, noteOrContent.Usn)
-		if !noteOk {
-			re.Ok = false
-			re.Msg = noteMsg
-			return c.RenderJSON(re)
-		}
-	}
+	// afterNoteUsn := 0
+	// noteOk := false
+	// noteMsg := ""
+	// if needUpdateNote {
+	// 	noteOk, noteMsg, afterNoteUsn = noteService.UpdateNote(c.getUserId(), noteOrContent.NoteId, noteUpdate, noteOrContent.Usn)
+	// 	if !noteOk {
+	// 		re.Ok = false
+	// 		re.Msg = noteMsg
+	// 		return c.RenderJSON(re)
+	// 	}
+	// }
 
-	//-------------
-	afterContentUsn := 0
-	contentOk := false
-	contentMsg := ""
-	if c.Has("Content") {
-		// 把fileId替换下
-		c.fixPostNotecontent(&noteOrContent)
-		// 如果传了Abstract就用之
-		if noteOrContent.Abstract == "" {
-			noteOrContent.Abstract = SubStringHTML(noteOrContent.Content, 200, "")
-		}
+	// //-------------
+	// afterContentUsn := 0
+	// contentOk := false
+	// contentMsg := ""
+	// if c.Has("Content") {
+	// 	// 把fileId替换下
+	// 	c.fixPostNotecontent(&noteOrContent)
+	// 	// 如果传了Abstract就用之
+	// 	if noteOrContent.Abstract == "" {
+	// 		noteOrContent.Abstract = SubStringHTML(noteOrContent.Content, 200, "")
+	// 	}
 
-		//		Log("--------> afte fixed")
-		//		Log(noteOrContent.Content)
-		contentOk, contentMsg, afterContentUsn = noteService.UpdateNoteContent(c.getUserId(),
-			noteOrContent.NoteId,
-			noteOrContent.Content,
-			noteOrContent.Abstract,
-			needUpdateNote,
-			noteOrContent.Usn,
-			noteOrContent.UpdatedTime)
-	}
+	// 	//		Log("--------> afte fixed")
+	// 	//		Log(noteOrContent.Content)
+	// 	contentOk, contentMsg, afterContentUsn = noteService.UpdateNoteContent(c.getUserId(),
+	// 		noteOrContent.NoteId,
+	// 		noteOrContent.Content,
+	// 		noteOrContent.Abstract,
+	// 		needUpdateNote,
+	// 		noteOrContent.Usn,
+	// 		noteOrContent.UpdatedTime)
+	// }
 
-	if needUpdateNote {
-		re.Ok = noteOk
-		re.Msg = noteMsg
-		re.Usn = afterNoteUsn
-	} else {
-		re.Ok = contentOk
-		re.Msg = contentMsg
-		re.Usn = afterContentUsn
-	}
+	// if needUpdateNote {
+	// 	re.Ok = noteOk
+	// 	re.Msg = noteMsg
+	// 	re.Usn = afterNoteUsn
+	// } else {
+	// 	re.Ok = contentOk
+	// 	re.Msg = contentMsg
+	// 	re.Usn = afterContentUsn
+	// }
 
-	if !re.Ok {
-		return c.RenderJSON(re)
-	}
+	// if !re.Ok {
+	// 	return c.RenderJSON(re)
+	// }
 
-	noteOrContent.Content = ""
-	noteOrContent.Usn = re.Usn
-	noteOrContent.UpdatedTime = time.Now()
+	// noteOrContent.Content = ""
+	// noteOrContent.Usn = re.Usn
+	// noteOrContent.UpdatedTime = time.Now()
 
-	//	Log("after upload")
-	//	LogJ(noteOrContent.Files)
-	noteOrContent.UserId = c.getUserId()
+	// //	Log("after upload")
+	// //	LogJ(noteOrContent.Files)
+	// noteOrContent.UserId = c.getUserId()
 
-	return c.RenderJSON(noteOrContent)
+	// return c.RenderJSON(noteOrContent)
+	return nil
 }
 
 // 删除trash
@@ -578,7 +576,7 @@ func (c ApiNote) ExportPdf(noteId string) revel.Result {
 		return c.RenderJSON(re)
 	}
 
-	noteUserId := note.UserId.Hex()
+	noteUserId := note.UserId
 	// 是否有权限
 	if noteUserId != userId {
 		// 是否是有权限协作的

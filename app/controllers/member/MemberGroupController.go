@@ -45,7 +45,7 @@ func (c MemberGroup) AddUser(groupId, email string) revel.Result {
 	if userInfo.UserId == "" {
 		re.Msg = "userNotExists"
 	} else {
-		re.Ok, re.Msg = groupService.AddUser(c.GetUserId(), groupId, userInfo.UserId.Hex())
+		re.Ok, re.Msg = groupService.AddUser(c.GetUserId(), groupId, userInfo.UserId )
 		re.Item = userInfo
 	}
 	return c.RenderRe(re)

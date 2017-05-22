@@ -140,7 +140,7 @@ func (this *EmailService) SendEmail(to, subject, body string) (ok bool, e string
 // AddUser调用
 // 可以使用一个goroutine
 func (this *EmailService) RegisterSendActiveEmail(userInfo info.User, email string) bool {
-	token := tokenService.NewToken(userInfo.UserId.Hex(), email, info.TokenActiveEmail)
+	token := tokenService.NewToken(userInfo.UserId , email, info.TokenActiveEmail)
 	if token == "" {
 		return false
 	}
@@ -156,7 +156,7 @@ func (this *EmailService) RegisterSendActiveEmail(userInfo info.User, email stri
 	// {siteUrl} {tokenUrl} {token} {tokenTimeout} {user.id} {user.email} {user.username}
 	token2Value := map[string]interface{}{"siteUrl": configService.GetSiteUrl(), "tokenUrl": tokenUrl, "token": token, "tokenTimeout": strconv.Itoa(int(tokenService.GetOverHours(info.TokenActiveEmail))),
 		"user": map[string]interface{}{
-			"userId":   userInfo.UserId.Hex(),
+			"userId":   userInfo.UserId ,
 			"email":    userInfo.Email,
 			"username": userInfo.Username,
 		},
@@ -182,7 +182,7 @@ func (this *EmailService) UpdateEmailSendActiveEmail(userInfo info.User, email s
 		return
 	}
 
-	token := tokenService.NewToken(userInfo.UserId.Hex(), email, info.TokenUpdateEmail)
+	token := tokenService.NewToken(userInfo.UserId , email, info.TokenUpdateEmail)
 
 	if token == "" {
 		return
@@ -197,7 +197,7 @@ func (this *EmailService) UpdateEmailSendActiveEmail(userInfo info.User, email s
 	token2Value := map[string]interface{}{"siteUrl": configService.GetSiteUrl(), "tokenUrl": tokenUrl, "token": token, "tokenTimeout": strconv.Itoa(int(tokenService.GetOverHours(info.TokenActiveEmail))),
 		"newEmail": email,
 		"user": map[string]interface{}{
-			"userId":   userInfo.UserId.Hex(),
+			"userId":   userInfo.UserId ,
 			"email":    userInfo.Email,
 			"username": userInfo.Username,
 		},
@@ -263,12 +263,12 @@ func (this *EmailService) SendCommentEmail(note info.Note, comment info.BlogComm
 	// title := "评论提醒"
 
 	/*
-		toUserId := note.UserId.Hex()
+		toUserId := note.UserId 
 		// title := "评论提醒"
 
 		// 表示回复回复的内容, 那么发送给之前回复的
 		if comment.CommentId != "" {
-			toUserId = comment.UserId.Hex()
+			toUserId = comment.UserId 
 		}
 		toUserInfo := userService.GetUserInfo(toUserId)
 		sendUserInfo := userService.GetUserInfo(userId)
@@ -276,17 +276,17 @@ func (this *EmailService) SendCommentEmail(note info.Note, comment info.BlogComm
 		subject := note.Title + " 收到 " + sendUserInfo.Username + " 的评论";
 		if comment.CommentId != "" {
 			subject = "您在 " + note.Title + " 发表的评论收到 " + sendUserInfo.Username;
-			if userId == note.UserId.Hex() {
+			if userId == note.UserId  {
 				subject += "(作者)";
 			}
 			subject += " 的评论";
 		}
 	*/
 
-	toUserId := note.UserId.Hex()
+	toUserId := note.UserId 
 	// 表示回复回复的内容, 那么发送给之前回复的
 	if comment.CommentId != "" {
-		toUserId = comment.UserId.Hex()
+		toUserId = comment.UserId 
 	}
 	toUserInfo := userService.GetUserInfo(toUserId) // 被评论者
 	sendUserInfo := userService.GetUserInfo(userId) // 评论者
@@ -297,22 +297,22 @@ func (this *EmailService) SendCommentEmail(note info.Note, comment info.BlogComm
 	// {commentedUser.userId} {commentedUser.username} {commentedUser.email}
 	token2Value := map[string]interface{}{"siteUrl": configService.GetSiteUrl(), "blogUrl": configService.GetBlogUrl(),
 		"blog": map[string]string{
-			"id":    note.NoteId.Hex(),
+			"id":    note.NoteId ,
 			"title": note.Title,
-			"url":   configService.GetBlogUrl() + "/view/" + note.NoteId.Hex(),
+			"url":   configService.GetBlogUrl() + "/view/" + note.NoteId ,
 		},
 		"commentContent": content,
 		// 评论者信息
-		"commentUser": map[string]interface{}{"userId": sendUserInfo.UserId.Hex(),
+		"commentUser": map[string]interface{}{"userId": sendUserInfo.UserId ,
 			"username":     sendUserInfo.Username,
 			"email":        sendUserInfo.Email,
-			"isBlogAuthor": userId == note.UserId.Hex(),
+			"isBlogAuthor": userId == note.UserId ,
 		},
 		// 被评论者信息
 		"commentedUser": map[string]interface{}{"userId": toUserId,
 			"username":     toUserInfo.Username,
 			"email":        toUserInfo.Email,
-			"isBlogAuthor": toUserId == note.UserId.Hex(),
+			"isBlogAuthor": toUserId == note.UserId ,
 		},
 	}
 
@@ -444,7 +444,7 @@ func (this *EmailService) SendEmailToUsers(users []info.User, subject, body stri
 		for _, user := range users {
 			LogJ(user)
 			m := map[string]interface{}{}
-			m["userId"] = user.UserId.Hex()
+			m["userId"] = user.UserId 
 			m["username"] = user.Username
 			m["email"] = user.Email
 			ok2, msg2, subject2, body2 := this.renderEmail(subject, body, m)

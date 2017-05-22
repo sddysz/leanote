@@ -1,14 +1,15 @@
 package controllers
 
 import (
-	"github.com/revel/revel"
 	"strings"
+
+	"github.com/revel/revel"
 	//	"encoding/json"
 	"fmt"
+
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
 	"github.com/sddysz/leanote/app/lea/blog"
-	"gopkg.in/mgo.v2/bson"
 	//	"github.com/sddysz/leanote/app/types"
 	//	"io/ioutil"
 	//	"math"
@@ -190,13 +191,13 @@ func (c Blog) getCateUrlTitle(n *info.Notebook) string {
 	if n.UrlTitle != "" {
 		return n.UrlTitle
 	}
-	return n.NotebookId.Hex()
+	return n.NotebookId
 }
 func (c Blog) getCates(userBlog info.UserBlog) {
-	notebooks := blogService.ListBlogNotebooks(userBlog.UserId.Hex())
+	notebooks := blogService.ListBlogNotebooks(userBlog.UserId)
 	notebooksMap := map[string]info.Notebook{}
 	for _, each := range notebooks {
-		notebooksMap[each.NotebookId.Hex()] = each
+		notebooksMap[each.NotebookId] = each
 	}
 
 	var i = 0
@@ -211,9 +212,9 @@ func (c Blog) getCates(userBlog info.UserBlog) {
 			if n, ok := notebooksMap[cateId]; ok {
 				parentNotebookId := ""
 				if n.ParentNotebookId != "" {
-					parentNotebookId = n.ParentNotebookId.Hex()
+					parentNotebookId = n.ParentNotebookId
 				}
-				cates[i] = &info.Cate{Title: n.Title, UrlTitle: c.getCateUrlTitle(&n), CateId: n.NotebookId.Hex(), ParentCateId: parentNotebookId}
+				cates[i] = &info.Cate{Title: n.Title, UrlTitle: c.getCateUrlTitle(&n), CateId: n.NotebookId, ParentCateId: parentNotebookId}
 				cateMap[cates[i].CateId] = cates[i]
 				i++
 				has[cateId] = true
@@ -223,11 +224,11 @@ func (c Blog) getCates(userBlog info.UserBlog) {
 
 	// 之后添加没有排序的
 	for _, n := range notebooks {
-		id := n.NotebookId.Hex()
+		id := n.NotebookId
 		if !has[id] {
 			parentNotebookId := ""
 			if n.ParentNotebookId != "" {
-				parentNotebookId = n.ParentNotebookId.Hex()
+				parentNotebookId = n.ParentNotebookId
 			}
 			cates[i] = &info.Cate{Title: n.Title, UrlTitle: c.getCateUrlTitle(&n), CateId: id, ParentCateId: parentNotebookId}
 			cateMap[cates[i].CateId] = cates[i]
@@ -287,7 +288,7 @@ func (c Blog) getSingles(userId string) {
 // $.blog = {userId, title, subTitle, desc, openComment, }
 func (c Blog) setBlog(userBlog info.UserBlog, userInfo info.User) {
 	blogInfo := map[string]interface{}{
-		"UserId":      userBlog.UserId.Hex(),
+		"UserId":      userBlog.UserId,
 		"Username":    userInfo.Username,
 		"UserLogo":    userInfo.Logo,
 		"Title":       userBlog.Title,
@@ -346,12 +347,12 @@ func (c Blog) blogCommon(userId string, userBlog info.UserBlog, userInfo info.Us
 	c.ViewArgs["curSingleId"] = ""
 
 	// 得到主题信息
-	themeInfo := themeService.GetThemeInfo(userBlog.ThemeId.Hex(), userBlog.Style)
+	themeInfo := themeService.GetThemeInfo(userBlog.ThemeId, userBlog.Style)
 	c.ViewArgs["themeInfo"] = themeInfo
 
 	//	Log(">>")
 	//	Log(userBlog.Style)
-	//	Log(userBlog.ThemeId.Hex())
+	//	Log(userBlog.ThemeId )
 
 	return true, userBlog
 }
@@ -361,7 +362,7 @@ func (c Blog) E(userIdOrEmail, tag string) revel.Result {
 	ok, userBlog := c.domain()
 	var userId string
 	if ok {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 	var userInfo info.User
 	if userId != "" {
@@ -370,7 +371,7 @@ func (c Blog) E(userIdOrEmail, tag string) revel.Result {
 		// blog.leanote.com/userid/tag
 		userInfo = userService.GetUserInfoByAny(userIdOrEmail)
 	}
-	userId = userInfo.UserId.Hex()
+	userId = userInfo.UserId
 	_, userBlog = c.blogCommon(userId, userBlog, userInfo)
 
 	return c.e404(userBlog.ThemePath)
@@ -387,7 +388,7 @@ func (c Blog) Tags(userIdOrEmail string) (re revel.Result) {
 
 	userId := ""
 	if hasDomain {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 
 	var userInfo info.User
@@ -397,7 +398,7 @@ func (c Blog) Tags(userIdOrEmail string) (re revel.Result) {
 		// blog.leanote.com/userid/tag
 		userInfo = userService.GetUserInfoByAny(userIdOrEmail)
 	}
-	userId = userInfo.UserId.Hex()
+	userId = userInfo.UserId
 
 	var ok = false
 	if ok, userBlog = c.blogCommon(userId, userBlog, userInfo); !ok {
@@ -422,7 +423,7 @@ func (c Blog) Tag(userIdOrEmail, tag string) (re revel.Result) {
 
 	userId := ""
 	if hasDomain {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 
 	var userInfo info.User
@@ -432,7 +433,7 @@ func (c Blog) Tag(userIdOrEmail, tag string) (re revel.Result) {
 		// blog.leanote.com/userid/tag
 		userInfo = userService.GetUserInfoByAny(userIdOrEmail)
 	}
-	userId = userInfo.UserId.Hex()
+	userId = userInfo.UserId
 
 	var ok = false
 	if ok, userBlog = c.blogCommon(userId, userBlog, userInfo); !ok {
@@ -469,7 +470,7 @@ func (c Blog) Archives(userIdOrEmail string, cateId string, year, month int) (re
 	}()
 	userId := ""
 	if hasDomain {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 
 	// 用户id为空, 转至博客平台
@@ -482,7 +483,7 @@ func (c Blog) Archives(userIdOrEmail string, cateId string, year, month int) (re
 	} else {
 		userInfo = userService.GetUserInfoByAny(userIdOrEmail)
 	}
-	userId = userInfo.UserId.Hex()
+	userId = userInfo.UserId
 
 	var ok = false
 	if ok, userBlog = c.blogCommon(userId, userBlog, userInfo); !ok {
@@ -524,10 +525,10 @@ func (c Blog) Cate(userIdOrEmail string, notebookId string) (re revel.Result) {
 	var notebook info.Notebook
 	if userId == "" { // 证明没有userIdOrEmail, 只有singleId, 那么直接查
 		notebook = notebookService.GetNotebookById(notebookId)
-		userId = notebook.UserId.Hex()
+		userId = notebook.UserId
 	} else {
 		notebook = notebookService.GetNotebookByUserIdAndUrlTitle(userId, notebookId)
-		notebookId2 = notebook.NotebookId.Hex()
+		notebookId2 = notebook.NotebookId
 	}
 	var ok = false
 	if ok, userBlog = c.blogCommon(userId, userBlog, userInfo); !ok {
@@ -557,7 +558,7 @@ func (c Blog) Cate(userIdOrEmail string, notebookId string) (re revel.Result) {
 func (c Blog) userIdOrEmail(hasDomain bool, userBlog info.UserBlog, userIdOrEmail string) (userId string, userInfo info.User) {
 	userId = ""
 	if hasDomain {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 	if userId != "" {
 		userInfo = userService.GetUserInfoByAny(userId)
@@ -568,7 +569,7 @@ func (c Blog) userIdOrEmail(hasDomain bool, userBlog info.UserBlog, userIdOrEmai
 			return
 		}
 	}
-	userId = userInfo.UserId.Hex()
+	userId = userInfo.UserId
 	return
 }
 
@@ -618,7 +619,7 @@ func (c Blog) Post(userIdOrEmail, noteId string) (re revel.Result) {
 	var blogInfo info.BlogItem
 	if userId == "" { // 证明没有userIdOrEmail, 只有singleId, 那么直接查
 		blogInfo = blogService.GetBlog(noteId)
-		userId = blogInfo.UserId.Hex()
+		userId = blogInfo.UserId
 	} else {
 		blogInfo = blogService.GetBlogByIdAndUrlTitle(userId, noteId)
 	}
@@ -670,7 +671,7 @@ func (c Blog) Single(userIdOrEmail, singleId string) (re revel.Result) {
 	var single info.BlogSingle
 	if userId == "" { // 证明没有userIdOrEmail, 只有singleId, 那么直接查
 		single = blogService.GetSingle(singleId)
-		userId = single.UserId.Hex()
+		userId = single.UserId
 	} else {
 		single = blogService.GetSingleByUserIdAndUrlTitle(userId, singleId)
 	}
@@ -683,14 +684,14 @@ func (c Blog) Single(userIdOrEmail, singleId string) (re revel.Result) {
 	}
 
 	c.ViewArgs["single"] = map[string]interface{}{
-		"SingleId":    single.SingleId.Hex(),
+		"SingleId":    single.SingleId,
 		"Title":       single.Title,
 		"UrlTitle":    single.UrlTitle,
 		"Content":     single.Content,
 		"CreatedTime": single.CreatedTime,
 		"UpdatedTime": single.UpdatedTime,
 	}
-	c.ViewArgs["curSingleId"] = single.SingleId.Hex()
+	c.ViewArgs["curSingleId"] = single.SingleId
 	c.ViewArgs["curIsSingle"] = true
 
 	return c.render("single.html", userBlog.ThemePath)
@@ -707,7 +708,7 @@ func (c Blog) Search(userIdOrEmail, keywords string) (re revel.Result) {
 	}()
 	userId := ""
 	if hasDomain {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 
 	var userInfo info.User
@@ -717,7 +718,7 @@ func (c Blog) Search(userIdOrEmail, keywords string) (re revel.Result) {
 		userInfo = userService.GetUserInfoByAny(userIdOrEmail)
 	}
 	//	c.ViewArgs["userInfo"] = userInfo
-	userId = userInfo.UserId.Hex()
+	userId = userInfo.UserId
 	var ok = false
 	if ok, userBlog = c.blogCommon(userId, userBlog, userInfo); !ok {
 		return c.e404(userBlog.ThemePath)
@@ -861,7 +862,7 @@ func (c Blog) LikeComment(commentId string, callback string) revel.Result {
 	re := info.NewRe()
 	ok, isILikeIt, num := blogService.LikeComment(commentId, c.GetUserId())
 	re.Ok = ok
-	re.Item = bson.M{"IsILikeIt": isILikeIt, "Num": num}
+
 	return c.RenderJSONP(callback, re)
 }
 
@@ -874,7 +875,7 @@ func (c Blog) ListCateLatest(notebookId, callback string) revel.Result {
 	hasDomain, userBlog := c.domain()
 	userId := ""
 	if hasDomain {
-		userId = userBlog.UserId.Hex()
+		userId = userBlog.UserId
 	}
 
 	var notebook info.Notebook
@@ -882,10 +883,10 @@ func (c Blog) ListCateLatest(notebookId, callback string) revel.Result {
 	if !notebook.IsBlog {
 		return c.e404(userBlog.ThemePath)
 	}
-	if userId != "" && userId != notebook.UserId.Hex() {
+	if userId != "" && userId != notebook.UserId {
 		return c.e404(userBlog.ThemePath)
 	}
-	userId = notebook.UserId.Hex()
+	userId = notebook.UserId
 
 	var ok = false
 	if ok, userBlog = c.blogCommon(userId, userBlog, info.User{}); !ok {

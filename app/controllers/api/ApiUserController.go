@@ -5,14 +5,11 @@ import (
 	//	"encoding/json"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
-	"time"
 	//	"github.com/sddysz/leanote/app/types"
 	"io/ioutil"
 	//	"fmt"
 	//	"math"
 	"os"
-
 	//	"path"
 	//	"strconv"
 )
@@ -31,7 +28,7 @@ func (c ApiUser) Info() revel.Result {
 		return c.RenderJSON(re)
 	}
 	apiUser := info.ApiUser{
-		UserId:   userInfo.UserId.Hex(),
+		UserId:   userInfo.UserId,
 		Username: userInfo.Username,
 		Email:    userInfo.Email,
 		Logo:     userInfo.Logo,
@@ -78,8 +75,9 @@ func (c ApiUser) UpdatePwd(oldPwd, pwd string) revel.Result {
 // 获得同步状态
 // [OK]
 func (c ApiUser) GetSyncState() revel.Result {
-	ret := bson.M{"LastSyncUsn": userService.GetUsn(c.getUserId()), "LastSyncTime": time.Now().Unix()}
-	return c.RenderJSON(ret)
+	// ret := bson.M{"LastSyncUsn": userService.GetUsn(c.getUserId()), "LastSyncTime": time.Now().Unix()}
+	// return c.RenderJSON(ret)
+	return nil
 }
 
 // 头像设置

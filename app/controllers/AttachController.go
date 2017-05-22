@@ -6,14 +6,14 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"fmt"
-	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/sddysz/leanote/app/info"
+	. "github.com/sddysz/leanote/app/lea"
 )
 
 // 附件
@@ -93,15 +93,12 @@ func (c Attach) uploadAttach(noteId string) (re info.Re) {
 	filesize := GetFilesize(toPath)
 	fileInfo = info.Attach{Name: filename,
 		Title:        handel.Filename,
-		NoteId:       bson.ObjectIdHex(noteId),
+		NoteId:       noteId,
 		UploadUserId: c.GetObjectUserId(),
 		Path:         filePath + "/" + filename,
 		Type:         fileType,
 		Size:         filesize}
 
-	id := bson.NewObjectId()
-	fileInfo.AttachId = id
-	fileId = id.Hex()
 	Ok, resultMsg = attachService.AddAttach(fileInfo, false)
 	if resultMsg != "" {
 		resultMsg = c.Message(resultMsg)

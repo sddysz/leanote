@@ -1,11 +1,10 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
+	"time"
+
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 // token
@@ -17,18 +16,20 @@ type TokenService struct {
 
 // 生成token
 func (this *TokenService) NewToken(userId string, email string, tokenType int) string {
-	token := info.Token{UserId: bson.ObjectIdHex(userId), Token: NewGuidWith(email), CreatedTime: time.Now(), Email: email, Type: tokenType}
+	token := info.Token{UserId: userId, Token: NewGuidWith(email), CreatedTime: time.Now(), Email: email, Type: tokenType}
 
-	if db.Upsert(db.Tokens, bson.M{"_id": token.UserId}, token) {
-		return token.Token
-	}
+	// if db.Upsert(db.Tokens, bson.M{"_id": token.UserId}, token) {
+	// 	return token.Token
+	// }
 
 	return ""
 }
 
 // 删除token
 func (this *TokenService) DeleteToken(userId string, tokenType int) bool {
-	return db.Delete(db.Tokens, bson.M{"_id": bson.ObjectIdHex(userId), "Type": tokenType})
+	token := info.Token{}
+	affected, err := Engine.Where("UserId=?", userId).And("Type=?", tokenType).Delete(&token)
+	return err == nil
 }
 
 func (this *TokenService) GetOverHours(tokenType int) float64 {
@@ -51,7 +52,7 @@ func (this *TokenService) VerifyToken(token string, tokenType int) (ok bool, msg
 		return
 	}
 
-	db.GetByQ(db.Tokens, bson.M{"Token": token}, &tokenInfo)
+	//db.GetByQ(db.Tokens, bson.M{"Token": token}, &tokenInfo)
 
 	if tokenInfo.UserId == "" {
 		msg = "不存在"

@@ -1,11 +1,7 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
-		. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 /*
@@ -24,19 +20,19 @@ func (this *TagService) GetTags(userId string) []string {
 */
 
 func (this *TagService) AddTagsI(userId string, tags interface{}) bool {
-	if ts, ok2 := tags.([]string); ok2 {
-		return this.AddTags(userId, ts)
-	}
+	// if ts, ok2 := tags.([]string); ok2 {
+	// 	return this.AddTags(userId, ts)
+	// }
 	return false
 }
 func (this *TagService) AddTags(userId string, tags []string) bool {
-	for _, tag := range tags {
-		if !db.Upsert(db.Tags,
-			bson.M{"_id": bson.ObjectIdHex(userId)},
-			bson.M{"$addToSet": bson.M{"Tags": tag}}) {
-			return false
-		}
-	}
+	// for _, tag := range tags {
+	// 	if !db.Upsert(db.Tags,
+	// 		bson.M{"_id": bson.ObjectIdHex(userId)},
+	// 		bson.M{"$addToSet": bson.M{"Tags": tag}}) {
+	// 		return false
+	// 	}
+	// }
 	return true
 }
 
@@ -50,39 +46,39 @@ func (this *TagService) AddTags(userId string, tags []string) bool {
 // 删除note时, 都可以调用
 // 万能
 func (this *TagService) AddOrUpdateTag(userId string, tag string) info.NoteTag {
-	userIdO := bson.ObjectIdHex(userId)
+	userIdO := userId
 	noteTag := info.NoteTag{}
-	db.GetByQ(db.NoteTags, bson.M{"UserId": userIdO, "Tag": tag}, &noteTag)
+	// db.GetByQ(db.NoteTags, bson.M{"UserId": userIdO, "Tag": tag}, &noteTag)
 
-	// 存在, 则更新之
-	if noteTag.TagId != "" {
-		// 统计note数
-		count := noteService.CountNoteByTag(userId, tag)
-		noteTag.Count = count
-		noteTag.UpdatedTime = time.Now()
-		//		noteTag.Usn = userService.IncrUsn(userId), 更新count而已
+	// // 存在, 则更新之
+	// if noteTag.TagId != "" {
+	// 	// 统计note数
+	// 	count := noteService.CountNoteByTag(userId, tag)
+	// 	noteTag.Count = count
+	// 	noteTag.UpdatedTime = time.Now()
+	// 	//		noteTag.Usn = userService.IncrUsn(userId), 更新count而已
 
-		// 之前删除过的, 现在要添加回来了
-		if noteTag.IsDeleted {
-			Log("之前删除过的, 现在要添加回来了:  " + tag)
-			noteTag.Usn = userService.IncrUsn(userId)
-			noteTag.IsDeleted = false
-		}
+	// 	// 之前删除过的, 现在要添加回来了
+	// 	if noteTag.IsDeleted {
+	// 		Log("之前删除过的, 现在要添加回来了:  " + tag)
+	// 		noteTag.Usn = userService.IncrUsn(userId)
+	// 		noteTag.IsDeleted = false
+	// 	}
 
-		db.UpdateByIdAndUserId(db.NoteTags, noteTag.TagId.Hex(), userId, noteTag)
-		return noteTag
-	}
+	// 	db.UpdateByIdAndUserId(db.NoteTags, noteTag.TagId , userId, noteTag)
+	// 	return noteTag
+	// }
 
-	// 不存在, 则创建之
-	noteTag.TagId = bson.NewObjectId()
-	noteTag.Count = 1
-	noteTag.Tag = tag
-	noteTag.UserId = bson.ObjectIdHex(userId)
-	noteTag.CreatedTime = time.Now()
-	noteTag.UpdatedTime = noteTag.CreatedTime
-	noteTag.Usn = userService.IncrUsn(userId)
-	noteTag.IsDeleted = false
-	db.Insert(db.NoteTags, noteTag)
+	// // 不存在, 则创建之
+	// noteTag.TagId = bson.NewObjectId()
+	// noteTag.Count = 1
+	// noteTag.Tag = tag
+	// noteTag.UserId = bson.ObjectIdHex(userId)
+	// noteTag.CreatedTime = time.Now()
+	// noteTag.UpdatedTime = noteTag.CreatedTime
+	// noteTag.Usn = userService.IncrUsn(userId)
+	// noteTag.IsDeleted = false
+	// db.Insert(db.NoteTags, noteTag)
 
 	return noteTag
 }
@@ -90,10 +86,10 @@ func (this *TagService) AddOrUpdateTag(userId string, tag string) info.NoteTag {
 // 得到标签, 按更新时间来排序
 func (this *TagService) GetTags(userId string) []info.NoteTag {
 	tags := []info.NoteTag{}
-	query := bson.M{"UserId": bson.ObjectIdHex(userId), "IsDeleted": false}
-	q := db.NoteTags.Find(query)
-	sortFieldR := "-UpdatedTime"
-	q.Sort(sortFieldR).All(&tags)
+	// query := bson.M{"UserId": bson.ObjectIdHex(userId), "IsDeleted": false}
+	// q := db.NoteTags.Find(query)
+	// sortFieldR := "-UpdatedTime"
+	// q.Sort(sortFieldR).All(&tags)
 	return tags
 }
 
@@ -102,27 +98,27 @@ func (this *TagService) GetTags(userId string) []info.NoteTag {
 // 返回noteId => usn
 func (this *TagService) DeleteTag(userId string, tag string) map[string]int {
 	usn := userService.IncrUsn(userId)
-	if db.UpdateByQMap(db.NoteTags, bson.M{"UserId": bson.ObjectIdHex(userId), "Tag": tag}, bson.M{"Usn": usn, "IsDeleted": true}) {
-		return noteService.UpdateNoteToDeleteTag(userId, tag)
-	}
+	// if db.UpdateByQMap(db.NoteTags, bson.M{"UserId": bson.ObjectIdHex(userId), "Tag": tag}, bson.M{"Usn": usn, "IsDeleted": true}) {
+	// 	return noteService.UpdateNoteToDeleteTag(userId, tag)
+	// }
 	return map[string]int{}
 }
 
 // 删除标签, 供API调用
 func (this *TagService) DeleteTagApi(userId string, tag string, usn int) (ok bool, msg string, toUsn int) {
-	noteTag := info.NoteTag{}
-	db.GetByQ(db.NoteTags, bson.M{"UserId": bson.ObjectIdHex(userId), "Tag": tag}, &noteTag)
+	// noteTag := info.NoteTag{}
+	// db.GetByQ(db.NoteTags, bson.M{"UserId": bson.ObjectIdHex(userId), "Tag": tag}, &noteTag)
 
-	if noteTag.TagId == "" {
-		return false, "notExists", 0
-	}
-	if noteTag.Usn > usn {
-		return false, "conflict", 0
-	}
-	toUsn = userService.IncrUsn(userId)
-	if db.UpdateByQMap(db.NoteTags, bson.M{"UserId": bson.ObjectIdHex(userId), "Tag": tag}, bson.M{"Usn": usn, "IsDeleted": true}) {
-		return true, "", toUsn
-	}
+	// if noteTag.TagId == "" {
+	// 	return false, "notExists", 0
+	// }
+	// if noteTag.Usn > usn {
+	// 	return false, "conflict", 0
+	// }
+	// toUsn = userService.IncrUsn(userId)
+	// if db.UpdateByQMap(db.NoteTags, bson.M{"UserId": bson.ObjectIdHex(userId), "Tag": tag}, bson.M{"Usn": usn, "IsDeleted": true}) {
+	// 	return true, "", toUsn
+	// }
 	return false, "", 0
 }
 
@@ -139,7 +135,7 @@ func (this *TagService) reCountTagCount(userId string, tags []string) {
 // 同步用
 func (this *TagService) GeSyncTags(userId string, afterUsn, maxEntry int) []info.NoteTag {
 	noteTags := []info.NoteTag{}
-	q := db.NoteTags.Find(bson.M{"UserId": bson.ObjectIdHex(userId), "Usn": bson.M{"$gt": afterUsn}})
-	q.Sort("Usn").Limit(maxEntry).All(&noteTags)
+	// q := db.NoteTags.Find(bson.M{"UserId": bson.ObjectIdHex(userId), "Usn": bson.M{"$gt": afterUsn}})
+	// q.Sort("Usn").Limit(maxEntry).All(&noteTags)
 	return noteTags
 }

@@ -140,7 +140,7 @@ func (c MemberBlog) Cate() revel.Result {
 	notebooks := blogService.ListBlogNotebooks(c.GetUserId())
 	notebooksMap := map[string]info.Notebook{}
 	for _, each := range notebooks {
-		notebooksMap[each.NotebookId.Hex()] = each
+		notebooksMap[each.NotebookId ] = each
 	}
 
 	var i = 0
@@ -160,7 +160,7 @@ func (c MemberBlog) Cate() revel.Result {
 	}
 	// 之后
 	for _, each := range notebooks {
-		id := each.NotebookId.Hex()
+		id := each.NotebookId 
 		if !has[id] {
 			notebooks2[i] = each
 			i++

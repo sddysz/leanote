@@ -45,7 +45,7 @@ func (this *ConfigService) InitGlobalConfigs() bool {
 	if userInfo.UserId == "" {
 		return false
 	}
-	this.adminUserId = userInfo.UserId.Hex()
+	this.adminUserId = userInfo.UserId 
 
 	configs := []info.Config{}
 	// db.ListByQ(db.Configs, bson.M{"UserId": userInfo.UserId}, &configs)

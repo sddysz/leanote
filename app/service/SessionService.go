@@ -1,11 +1,8 @@
 package service
 
 import (
-	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
-	"time"
 	//	"strings"
 )
 
@@ -14,26 +11,28 @@ type SessionService struct {
 }
 
 func (this *SessionService) Update(sessionId, key string, value interface{}) bool {
-	return db.UpdateByQMap(db.Sessions, bson.M{"SessionId": sessionId},
-		bson.M{key: value, "UpdatedTime": time.Now()})
+	// return db.UpdateByQMap(db.Sessions, bson.M{"SessionId": sessionId},
+	// 	bson.M{key: value, "UpdatedTime": time.Now()})
+	return true
 }
 
 // 注销时清空session
 func (this *SessionService) Clear(sessionId string) bool {
-	return db.Delete(db.Sessions, bson.M{"SessionId": sessionId})
+	// return db.Delete(db.Sessions, bson.M{"SessionId": sessionId})
+	return true
 }
 func (this *SessionService) Get(sessionId string) info.Session {
 	session := info.Session{}
-	db.GetByQ(db.Sessions, bson.M{"SessionId": sessionId}, &session)
+	// db.GetByQ(db.Sessions, bson.M{"SessionId": sessionId}, &session)
 
-	// 如果没有session, 那么插入一条之
-	if session.Id == "" {
-		session.Id = bson.NewObjectId()
-		session.SessionId = sessionId
-		session.CreatedTime = time.Now()
-		session.UpdatedTime = session.CreatedTime
-		db.Insert(db.Sessions, session)
-	}
+	// // 如果没有session, 那么插入一条之
+	// if session.Id == "" {
+	// 	session.Id = bson.NewObjectId()
+	// 	session.SessionId = sessionId
+	// 	session.CreatedTime = time.Now()
+	// 	session.UpdatedTime = session.CreatedTime
+	// 	db.Insert(db.Sessions, session)
+	// }
 
 	return session
 }
@@ -78,8 +77,8 @@ func (this *SessionService) SetCaptcha(sessionId, captcha string) bool {
 func (this *SessionService) GetUserId(sessionId string) string {
 	session := this.Get(sessionId)
 	// 更新updateTime, 避免过期
-	db.UpdateByQMap(db.Sessions, bson.M{"SessionId": sessionId},
-		bson.M{"UpdatedTime": time.Now()})
+	// db.UpdateByQMap(db.Sessions, bson.M{"SessionId": sessionId},
+	// 	bson.M{"UpdatedTime": time.Now()})
 	return session.UserId
 }
 
