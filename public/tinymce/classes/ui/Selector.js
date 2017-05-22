@@ -11,7 +11,7 @@
 /*eslint no-nested-ternary:0 */
 
 /**
- * Selector engine, enables you to select controls by using CSS like expressions.
+ * Selector db.Engine, enables you to select controls by using CSS like expressions.
  * We currently only support basic CSS expressions to reduce the size of the core
  * and the ones we support should be enough for most cases.
  *

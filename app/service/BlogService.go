@@ -44,7 +44,7 @@ func (this *BlogService) GetBlogByIdAndUrlTitle(userId string, noteIdOrUrlTitle 
 	}
 	note := info.Note{}
 
-	Engine.Where("UserId=? and UrlTitle=? and IsBlog=? and IsTrash=? and IsDeleted=?", userId, noteIdOrUrlTitle, true, false, false).Get(&note)
+	db.Engine.Where("UserId=? and UrlTitle=? and IsBlog=? and IsTrash=? and IsDeleted=?", userId, noteIdOrUrlTitle, true, false, false).Get(&note)
 	return this.GetBlogItem(note)
 }
 
@@ -71,7 +71,7 @@ func (this *BlogService) GetBlogItem(note info.Note) (blog info.BlogItem) {
 // 3/19 博客不是deleted
 func (this *BlogService) ListBlogNotebooks(userId string) []info.Notebook {
 	notebooks := []info.Notebook{}
-	Engine.Where("IsDeleted = false or IsDeleted is null").And("UserId=?", userId).And("IsBlog=?", ture).Find(&notebooks)
+	db.Engine.Where("IsDeleted = false or IsDeleted is null").And("UserId=?", userId).And("IsBlog=?", ture).Find(&notebooks)
 
 	return notebooks
 }
@@ -129,7 +129,7 @@ func (this *BlogService) GetBlogTags(userId string) []info.TagCount {
 	tagCounts := []info.TagCount{}
 	// tag不能为空
 
-	Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("Tag is not null").Sort("-Count").Find(&tagCounts)
+	db.Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("Tag is not null").Sort("-Count").Find(&tagCounts)
 
 	return tagCounts
 }
@@ -141,9 +141,9 @@ func (this *BlogService) ReCountBlogTags(userId string) bool {
 	notes := []info.Note{}
 	userIdO := userId
 
-	Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("IsDeleted=?", false).And("IsTrash=?", false).Cols("Tags").Find(&notes)
+	db.Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("IsDeleted=?", false).And("IsTrash=?", false).Cols("Tags").Find(&notes)
 
-	Engine.Where("UserId=?", userIdO).And("IsBlog", true).Delete()
+	db.Engine.Where("UserId=?", userIdO).And("IsBlog", true).Delete()
 
 	if notes == nil || len(notes) == 0 {
 		return true
@@ -163,7 +163,7 @@ func (this *BlogService) ReCountBlogTags(userId string) bool {
 	// 一个个插入
 	for tag, count := range tagsCount {
 		tagCount := info.TagCount{UserId: userIdO, IsBlog: true, Tag: tag, Count: count}
-		Engine.Insert(&tagCount)
+		db.Engine.Insert(&tagCount)
 	}
 	return true
 }
@@ -183,7 +183,7 @@ Posts: []
 */
 func (this *BlogService) ListBlogsArchive(userId, notebookId string, year, month int, sortField string, isAsc bool) []info.Archive {
 	//	_, notes := noteService.ListNotes(userId, notebookId, false, 1, 99999, sortField, isAsc, true);
-	s := Engine.NewSession()
+	s := db.Engine.NewSession()
 	s = s.Where("UserId=?", userId).And("IsBlog", true).And("IsTrash", false).And("IsDeleted".false)
 	if notebookId != "" {
 		s = s.And("NotebookId=?", notebookId)
@@ -294,12 +294,12 @@ func (this *BlogService) SearchBlogByTags(tags []string, userId string, pageNumb
 
 	// 不是trash的
 	if isAsc {
-		Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Asc(sortField).Limit(skipNum, pageSize).Find(&notes)
+		db.Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Asc(sortField).Limit(skipNum, pageSize).Find(&notes)
 	} else {
-		Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Desc(sortField).Limit(skipNum, pageSize).Find(&notes)
+		db.Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Desc(sortField).Limit(skipNum, pageSize).Find(&notes)
 	}
 	note := inf.Note{}
-	count, _ := Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Count(&note)
+	count, _ := db.Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Count(&note)
 
 	// 总记录数
 	if count == 0 {
@@ -536,7 +536,7 @@ func (this *BlogService) fixUserBlog(userBlog *info.UserBlog) {
 }
 func (this *BlogService) GetUserBlog(userId string) info.UserBlog {
 	userBlog := info.UserBlog{}
-	Engine.Where("UserId=?", userId).Get(&userBlog)
+	db.Engine.Where("UserId=?", userId).Get(&userBlog)
 	this.fixUserBlog(&userBlog)
 	return userBlog
 }

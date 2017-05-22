@@ -15,7 +15,7 @@
 /*eslint no-nested-ternary:0, func-style:0, no-bitwise:0, max-len:0, brace-style:0, no-return-assign:0, no-multi-spaces:0 */
 
 /**
- * Sizzle CSS Selector Engine v@VERSION
+ * Sizzle CSS Selector db.Engine v@VERSION
  * http://sizzlejs.com/
  *
  * Copyright 2008, 2014 jQuery Foundation, Inc. and other contributors

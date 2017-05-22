@@ -667,7 +667,7 @@ define("tinymce/dom/EventUtils", [], function() {
 /*eslint no-nested-ternary:0, func-style:0, no-bitwise:0, max-len:0, brace-style:0, no-return-assign:0, no-multi-spaces:0 */
 
 /**
- * Sizzle CSS Selector Engine v@VERSION
+ * Sizzle CSS Selector db.Engine v@VERSION
  * http://sizzlejs.com/
  *
  * Copyright 2008, 2014 jQuery Foundation, Inc. and other contributors
@@ -13813,7 +13813,7 @@ define("tinymce/util/VK", [
 /**
  * This class handles control selection of elements. Controls are elements
  * that can be resized and needs to be selected as a whole. It adds custom resize handles
- * to all browser engines that support properly disabling the built in resize logic.
+ * to all browser db.Engines that support properly disabling the built in resize logic.
  *
  * @class tinymce.dom.ControlSelection
  */
@@ -16070,8 +16070,8 @@ define("tinymce/fmt/Preview", [
  */
 
 /**
- * Text formatter engine class. This class is used to apply formats like bold, italic, font size
- * etc to the current selection or specific nodes. This engine was build to replace the browsers
+ * Text formatter db.Engine class. This class is used to apply formats like bold, italic, font size
+ * etc to the current selection or specific nodes. This db.Engine was build to replace the browsers
  * default formatting logic for execCommand due to it's inconsistent and buggy behavior.
  *
  * @class tinymce.Formatter
@@ -16095,7 +16095,7 @@ define("tinymce/Formatter", [
 	 * Constructs a new formatter instance.
 	 *
 	 * @constructor Formatter
-	 * @param {tinymce.Editor} ed Editor instance to construct the formatter engine to.
+	 * @param {tinymce.Editor} ed Editor instance to construct the formatter db.Engine to.
 	 */
 	return function(ed) {
 		var formats = {},
@@ -19946,7 +19946,7 @@ define("tinymce/EditorCommands", [
 				formatter.remove("link");
 			},
 
-			// Override justify commands to use the text formatter engine
+			// Override justify commands to use the text formatter db.Engine
 			'JustifyLeft,JustifyCenter,JustifyRight,JustifyFull': function(command) {
 				var align = command.substring(7);
 
@@ -19987,12 +19987,12 @@ define("tinymce/EditorCommands", [
 				}
 			},
 
-			// Override commands to use the text formatter engine
+			// Override commands to use the text formatter db.Engine
 			'Bold,Italic,Underline,Strikethrough,Superscript,Subscript': function(command) {
 				toggleFormat(command);
 			},
 
-			// Override commands to use the text formatter engine
+			// Override commands to use the text formatter db.Engine
 			'ForeColor,HiliteColor,FontName': function(command, ui, value) {
 				toggleFormat(command, value);
 			},
@@ -21660,7 +21660,7 @@ define("tinymce/util/EventDispatcher", [
 /*eslint no-nested-ternary:0 */
 
 /**
- * Selector engine, enables you to select controls by using CSS like expressions.
+ * Selector db.Engine, enables you to select controls by using CSS like expressions.
  * We currently only support basic CSS expressions to reduce the size of the core
  * and the ones we support should be enough for most cases.
  *
@@ -24137,7 +24137,7 @@ define("tinymce/ui/Factory", [], function() {
 			// #endif
 
 			ControlType = new ControlType(settings);
-			ControlType.type = type; // Set the type on the instance, this will be used by the Selector engine
+			ControlType.type = type; // Set the type on the instance, this will be used by the Selector db.Engine
 
 			return ControlType;
 		}
@@ -30044,7 +30044,7 @@ define("tinymce/Editor", [
 				// Focus the window iframe
 				if (!contentEditable) {
 					// WebKit needs this call to fire focusin event properly see #5948
-					// But Opera pre Blink engine will produce an empty selection so skip Opera
+					// But Opera pre Blink db.Engine will produce an empty selection so skip Opera
 					if (!Env.opera) {
 						self.getBody().focus();
 					}
@@ -33428,7 +33428,7 @@ define("tinymce/ui/Button", [
 		},
 
 		/**
-		 * Repaints the button for example after it's been resizes by a layout engine.
+		 * Repaints the button for example after it's been resizes by a layout db.Engine.
 		 *
 		 * @method repaint
 		 */

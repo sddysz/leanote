@@ -1055,7 +1055,7 @@ define("tinymce/Editor", [
 				// Focus the window iframe
 				if (!contentEditable) {
 					// WebKit needs this call to fire focusin event properly see #5948
-					// But Opera pre Blink engine will produce an empty selection so skip Opera
+					// But Opera pre Blink db.Engine will produce an empty selection so skip Opera
 					if (!Env.opera) {
 						self.getBody().focus();
 					}

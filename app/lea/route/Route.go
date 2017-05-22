@@ -1,7 +1,6 @@
 package route
 
 import (
-	"github.com/sddysz/leanote/app/db"
 	"github.com/revel/revel"
 	//	. "github.com/sddysz/leanote/app/lea"
 	"net/url"
@@ -45,7 +44,7 @@ func RouterFilter(c *revel.Controller, fc []revel.Filter) {
 	if route.ControllerName != "Static" {
 
 		// 检查mongodb 是否lost
-		db.CheckMongoSessionLost()
+		//db.CheckMongoSessionLost()
 
 		// api设置
 		// leanote.com/api/user/get => ApiUser::Get

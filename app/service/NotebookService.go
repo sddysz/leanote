@@ -98,17 +98,17 @@ func ParseAndSortNotebooks(userNotebooks []info.Notebook, noParentDelete, needSo
 // 得到某notebook
 func (this *NotebookService) GetNotebook(notebookId, userId string) info.Notebook {
 	notebook := info.Notebook{}
-	Engine.Where("NotebookId=？", notebookId).And("UserId=?", userId).Get(&notebook)
+	db.Engine.Where("NotebookId=？", notebookId).And("UserId=?", userId).Get(&notebook)
 	return notebook
 }
 func (this *NotebookService) GetNotebookById(notebookId string) info.Notebook {
 	notebook := info.Notebook{}
-	Engine.Id(notebookId).Get(&notebook)
+	db.Engine.Id(notebookId).Get(&notebook)
 	return notebook
 }
 func (this *NotebookService) GetNotebookByUserIdAndUrlTitle(userId, notebookIdOrUrlTitle string) info.Notebook {
 	notebook := info.Notebook{}
-	Engine.Where("NotebookId=?", notebookIdOrUrlTitle).Or("UrlTitle=?", notebookIdOrUrlTitle).And("UserId=?", userId).Get(&notebook)
+	db.Engine.Where("NotebookId=?", notebookIdOrUrlTitle).Or("UrlTitle=?", notebookIdOrUrlTitle).And("UserId=?", userId).Get(&notebook)
 	return notebook
 }
 
@@ -116,7 +116,7 @@ func (this *NotebookService) GetNotebookByUserIdAndUrlTitle(userId, notebookIdOr
 func (this *NotebookService) GeSyncNotebooks(userId string, afterUsn, maxEntry int) []info.Notebook {
 	notebooks := []info.Notebook{}
 
-	Engine.Where("UserId=?", userId).And("Usn>=?", afterUsn).Asc("Usn").Limit(0, maxEntry).Find(&notebooks)
+	db.Engine.Where("UserId=?", userId).And("Usn>=?", afterUsn).Asc("Usn").Limit(0, maxEntry).Find(&notebooks)
 	return notebooks
 }
 
@@ -126,7 +126,7 @@ func (this *NotebookService) GeSyncNotebooks(userId string, afterUsn, maxEntry i
 func (this *NotebookService) GetNotebooks(userId string) info.SubNotebooks {
 	userNotebooks := []info.Notebook{}
 
-	Engine.Where("UserId=?", userId).And("IsDeleted <>?", true).Find(&userNotebooks)
+	db.Engine.Where("UserId=?", userId).And("IsDeleted <>?", true).Find(&userNotebooks)
 	if len(userNotebooks) == 0 {
 		return nil
 	}
@@ -139,7 +139,7 @@ func (this *NotebookService) GetNotebooks(userId string) info.SubNotebooks {
 // 通过notebookIds得到notebooks, 并转成层次有序
 func (this *NotebookService) GetNotebooksByNotebookIds(notebookIds []int64) info.SubNotebooks {
 	userNotebooks := []info.Notebook{}
-	Engine.In("NotebookId", &notebookIds).Find(userNotebooks)
+	db.Engine.In("NotebookId", &notebookIds).Find(userNotebooks)
 	if len(userNotebooks) == 0 {
 		return nil
 	}
@@ -155,7 +155,7 @@ func (this *NotebookService) AddNotebook(notebook info.Notebook) (bool, info.Not
 	now := time.Now()
 	notebook.CreatedTime = now
 	notebook.UpdatedTime = now
-	affected, err := Engine.Insert(&notebook)
+	affected, err := db.Engine.Insert(&notebook)
 	if err != nil {
 		return false, notebook
 	}
@@ -195,14 +195,14 @@ func (this *NotebookService) UpdateNotebookApi(userId, notebookId, title, parent
 // 判断是否是blog
 func (this *NotebookService) IsBlog(notebookId string) bool {
 	notebook := info.Notebook{}
-	Engine.Id(notebookId).Get(&notebook)
+	db.Engine.Id(notebookId).Get(&notebook)
 	return notebook.IsBlog
 }
 
 // 判断是否是我的notebook
 func (this *NotebookService) IsMyNotebook(notebookId, userId string) bool {
 	notebook := info.Notebook{}
-	Engine.Id(notebookId).Get(&notebook)
+	db.Engine.Id(notebookId).Get(&notebook)
 	return notebook.UserId == userId
 }
 
@@ -221,7 +221,7 @@ func (this *NotebookService) UpdateNotebookTitle(notebookId, userId, title strin
 	notebook := info.Notebook{}
 	notebook.Usn = usn
 	notebook.Title = title
-	affected, err := Engine.Id(notebookId).Cols("Title", "Usn").Update(&notebook)
+	affected, err := db.Engine.Id(notebookId).Cols("Title", "Usn").Update(&notebook)
 	return err == nil
 }
 
@@ -231,7 +231,7 @@ func (this *NotebookService) UpdateNotebookTitle(notebookId, userId, title strin
 // 	notebook := info.Notebook{}
 // 	notebook.Usn = userService.IncrUsn(userId)
 // 	notebook.UpdatedTime = time.Now()
-// 	affected, err := Engine.Id(notebookId).Cols("UpdatedTime", "Usn").Update(&notebook)
+// 	affected, err := db.Engine.Id(notebookId).Cols("UpdatedTime", "Usn").Update(&notebook)
 // 	return err == nil
 // }
 
@@ -307,7 +307,7 @@ func (this *NotebookService) DeleteNotebookForce(userId, notebookId string, usn 
 	} else if notebook.Usn != usn {
 		return false, "conflict"
 	}
-	affected, err := Engine.Id(notebookId).Delete(&notebook)
+	affected, err := db.Engine.Id(notebookId).Delete(&notebook)
 	return false, err == nil
 }
 
@@ -325,7 +325,7 @@ func (this *NotebookService) SortNotebooks(userId string, notebookId2Seqs map[st
 		notebook.Seq = seq
 		notebook.Usn = userService.IncrUsn(userId)
 
-		affected, err := Engine.Id(notebookId).Update(&notebook)
+		affected, err := db.Engine.Id(notebookId).Update(&notebook)
 		if err != nil {
 			return false
 		}
@@ -364,7 +364,7 @@ func (this *NotebookService) DragNotebooks(userId string, curNotebookId string, 
 func (this *NotebookService) ReCountNotebookNumberNotes(notebookId string) bool {
 	notebookIdO := notebookId
 	notebook := info.Notebook{}
-	count, _ := Engine.Where("NotebookId=?", notebookId).And("IsTrash=?", false).And("IsDeleted=?", false).Count(&notebook)
+	count, _ := db.Engine.Where("NotebookId=?", notebookId).And("IsTrash=?", false).And("IsDeleted=?", false).Count(&notebook)
 	Log(count)
 	Log(notebookId)
 	return db.UpdateByQField(db.Notebooks, bson.M{"_id": notebookIdO}, "NumberNotes", count)

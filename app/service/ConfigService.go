@@ -49,7 +49,7 @@ func (this *ConfigService) InitGlobalConfigs() bool {
 
 	configs := []info.Config{}
 	// db.ListByQ(db.Configs, bson.M{"UserId": userInfo.UserId}, &configs)
-	Engine.Find(&configs)
+	db.Engine.Find(&configs)
 
 	for _, config := range configs {
 		if config.IsArr {
@@ -120,7 +120,7 @@ func (this *ConfigService) updateGlobalConfig(userId, key string, value interfac
 			config.ValueStr = v
 			this.GlobalStringConfigs[key] = v
 		}
-		affected, err := Engine.Insert(&config)
+		affected, err := db.Engine.Insert(&config)
 		return err == nil
 	} else {
 		//i := bson.M{"UpdatedTime": time.Now()}
@@ -143,7 +143,7 @@ func (this *ConfigService) updateGlobalConfig(userId, key string, value interfac
 			this.GlobalStringConfigs[key] = v
 		}
 		// return db.UpdateByQMap(db.Configs, bson.M{"UserId": bson.ObjectIdHex(userId), "Key": key}, i)
-		affected, err = Engine.Where("Key=?", key).Update(config)
+		affected, err = db.Engine.Where("Key=?", key).Update(config)
 		return err == nil
 	}
 }

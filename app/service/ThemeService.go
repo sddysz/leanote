@@ -501,7 +501,7 @@ func (this *ThemeService) upgradeThemeBeta2(userId, style string, isActive bool)
 	theme.IsActive = isActive
 	theme.IsDefault = true
 	theme.Style = style
-	affected, err := Engine.Insert(&theme)
+	affected, err := db.Engine.Insert(&theme)
 	return err == nil
 }
 

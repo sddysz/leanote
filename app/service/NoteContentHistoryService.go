@@ -58,6 +58,6 @@ func (this *NoteContentHistoryService) newHistory(noteId, userId string, eachHis
 // 列表展示
 func (this *NoteContentHistoryService) ListHistories(noteId, userId string) []info.EachHistory {
 	histories := info.NoteContentHistory{}
-	Engine.Where("NoteId=?", noteId).And("UserId=?", userId).Find(&histories)
+	db.Engine.Where("NoteId=?", noteId).And("UserId=?", userId).Find(&histories)
 	return histories.Histories
 }

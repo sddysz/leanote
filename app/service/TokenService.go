@@ -28,7 +28,7 @@ func (this *TokenService) NewToken(userId string, email string, tokenType int) s
 // 删除token
 func (this *TokenService) DeleteToken(userId string, tokenType int) bool {
 	token := info.Token{}
-	affected, err := Engine.Where("UserId=?", userId).And("Type=?", tokenType).Delete(&token)
+	affected, err := db.Engine.Where("UserId=?", userId).And("Type=?", tokenType).Delete(&token)
 	return err == nil
 }
 

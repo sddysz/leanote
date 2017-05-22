@@ -99,7 +99,7 @@ define("tinymce/ui/Button", [
 		},
 
 		/**
-		 * Repaints the button for example after it's been resizes by a layout engine.
+		 * Repaints the button for example after it's been resizes by a layout db.Engine.
 		 *
 		 * @method repaint
 		 */

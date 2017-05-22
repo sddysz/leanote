@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/revel/revel"
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
 )
@@ -17,17 +18,14 @@ type AttachService struct {
 // fromApi表示是api添加的, updateNote传过来的, 此时不要incNote's usn, 因为updateNote会inc的
 func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool, msg string) {
 
-	affected, err := Engine.Insert(attach)
+	affected, err := db.Engine.Insert(attach)
 	ok = err == nil
 	note := noteService.GetNoteById(attach.NoteId)
 
 	// api调用时, 添加attach之前是没有note的
-	var userId string
-	if note.NoteId != "" {
-		userId = note.UserId
-	} else {
-		userId = attach.UploadUserId
-	}
+	var userId int64
+
+	userId = note.UserId
 
 	if ok {
 		// 更新笔记的attachs num
@@ -36,7 +34,7 @@ func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool,
 
 	if !fromApi {
 		// 增长note's usn
-		noteService.IncrNoteUsn(attach.NoteId , userId)
+		noteService.IncrNoteUsn(attach.NoteId, userId)
 	}
 
 	return
@@ -46,7 +44,7 @@ func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool,
 // addNum 1或-1
 func (this *AttachService) updateNoteAttachNum(noteId int64, addNum int) bool {
 	attach := info.Attach{}
-	num, err := Engine.Where("NoteId=?", noteId).Count(attach)
+	num, err := db.Engine.Where("NoteId=?", noteId).Count(attach)
 
 	/*
 		note := info.Note{}
@@ -59,7 +57,7 @@ func (this *AttachService) updateNoteAttachNum(noteId int64, addNum int) bool {
 	*/
 	note := info.Note{}
 	note.AttachNum = num
-	affected, err := Engine.Id(noteId).Cols("AttachNum").Update(note)
+	affected, err := db.Engine.Id(noteId).Cols("AttachNum").Update(note)
 	return err == nil
 }
 
@@ -80,14 +78,14 @@ func (this *AttachService) ListAttachs(noteId, userId string) []info.Attach {
 
 	// TODO 这里, 优化权限控制
 
-	Engine.Where("NoteId=?", noteId).Find(&attachs)
+	db.Engine.Where("NoteId=?", noteId).Find(&attachs)
 	return attachs
 }
 
 // api调用, 通过noteIds得到note's attachs, 通过noteId归类返回
 func (this *AttachService) getAttachsByNoteIds(noteIds []int64) map[string][]info.Attach {
 	attachs := []info.Attach{}
-	Engine.In("NoteId", noteIds).Find(&attachs)
+	db.Engine.In("NoteId", noteIds).Find(&attachs)
 	noteAttchs := make(map[string][]info.Attach)
 	for _, attach := range attachs {
 		noteId := attach.NoteId
@@ -103,7 +101,7 @@ func (this *AttachService) getAttachsByNoteIds(noteIds []int64) map[string][]inf
 func (this *AttachService) UpdateImageTitle(userId, fileId, title string) bool {
 	attach := info.Attach{}
 	attach.Title = title
-	affected, err := Engine.Where("UserId=?", userId).And("FileId=?", fileId).Cols("Title").Update(&attach)
+	affected, err := db.Engine.Where("UserId=?", userId).And("FileId=?", fileId).Cols("Title").Update(&attach)
 	return err == nil
 }
 
@@ -112,7 +110,7 @@ func (this *AttachService) DeleteAllAttachs(noteId, userId string) bool {
 	note := noteService.GetNoteById(noteId)
 	if note.UserId == userId {
 		attachs := []info.Attach{}
-		Engine.Where("NoteId=?", noteId).Find(&attachs)
+		db.Engine.Where("NoteId=?", noteId).Find(&attachs)
 		for _, attach := range attachs {
 			attach.Path = strings.TrimLeft(attach.Path, "/")
 			os.Remove(revel.BasePath + "/" + attach.Path)
@@ -128,7 +126,7 @@ func (this *AttachService) DeleteAllAttachs(noteId, userId string) bool {
 func (this *AttachService) DeleteAttach(attachId, userId string) (bool, string) {
 	attach := info.Attach{}
 
-	Engine.Id(attachId).Get(&attach)
+	db.Engine.Id(attachId).Get(&attach)
 
 	if attach.AttachId != "" {
 		// 判断是否有权限为笔记添加附件
@@ -136,7 +134,7 @@ func (this *AttachService) DeleteAttach(attachId, userId string) (bool, string) 
 			return false, "No Perm"
 		}
 
-		if affected, err := Engine.Id(attachId).Delete(&attach); err == nil {
+		if affected, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
 			this.updateNoteAttachNum(attach.NoteId, -1)
 			attach.Path = strings.TrimLeft(attach.Path, "/")
 			err := os.Remove(revel.BasePath + "/" + attach.Path)
@@ -163,13 +161,13 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 	}
 
 	attach = info.Attach{}
-	Engine.Id(attachId).Get(&attach)
+	db.Engine.Id(attachId).Get(&attach)
 	path := attach.Path
 	if path == "" {
 		return
 	}
 
-	note := noteService.GetNoteById(attach.NoteId )
+	note := noteService.GetNoteById(attach.NoteId)
 
 	// 判断权限
 
@@ -196,7 +194,7 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 // noteService调用, 权限已判断
 func (this *AttachService) CopyAttachs(noteId, toNoteId, toUserId string) bool {
 	attachs := []info.Attach{}
-	Engine.Where("NoteId=?", noteId).Find(&attachs)
+	db.Engine.Where("NoteId=?", noteId).Find(&attachs)
 	// 复制之
 	for _, attach := range attachs {
 		attach.AttachId = ""
@@ -239,7 +237,7 @@ func (this *AttachService) UpdateOrDeleteAttachApi(noteId, userId string, files 
 	}
 
 	for _, attach := range attachs {
-		fileId := attach.AttachId 
+		fileId := attach.AttachId
 		if !nowAttachs[fileId] {
 			// 需要删除的
 			// TODO 权限验证去掉

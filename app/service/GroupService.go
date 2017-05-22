@@ -17,7 +17,7 @@ func (this *GroupService) AddGroup(userId, title string) (bool, info.Group) {
 		UserId: userId,
 		Title:  title,
 	}
-	affected, err := Engine.Insert(&group)
+	affected, err := db.Engine.Insert(&group)
 	return err == nil, group
 }
 
@@ -39,7 +39,7 @@ func (this *GroupService) DeleteGroup(userId, groupId string) (ok bool, msg stri
 	shareService.DeleteAllShareNoteGroup(groupId)
 
 	group := info.Group{}
-	affected, err := Engine.Id(groupId).Delete(group)
+	affected, err := db.Engine.Id(groupId).Delete(group)
 	return err == nil, ""
 
 	// TODO 删除分组后, 在shareNote, shareNotebook中也要删除
@@ -73,7 +73,7 @@ func (this *GroupService) GetGroupsAndUsers(userId string) []info.Group {
 func (this *GroupService) GetGroups(userId string) []info.Group {
 	// 得到分组s
 	groups := []info.Group{}
-	Engine.Where("UserId=?", userId).Find(&groups)
+	db.Engine.Where("UserId=?", userId).Find(&groups)
 	return groups
 }
 
@@ -115,7 +115,7 @@ func (this *GroupService) GetGroupsContainOf(userId string) []info.Group {
 
 	groups := []info.Group{}
 
-	Engine.In("Id", groupIds).Find(&group)
+	db.Engine.In("Id", groupIds).Find(&group)
 	for _, group := range groups {
 		if !myGroupMap[group.GroupId] {
 			myGroups = append(myGroups, group)
@@ -154,7 +154,7 @@ func (this *GroupService) GetUsers(groupId string) []info.User {
 func (this *GroupService) GetBelongToGroupIds(userId string) []int64 {
 	// 得到UserIds
 	groupUsers := []info.GroupUser{}
-	Engine.Where("UserId=?", userId).Find(&groupUsers)
+	db.Engine.Where("UserId=?", userId).Find(&groupUsers)
 	if len(groupUsers) == 0 {
 		return nil
 	}
@@ -224,6 +224,6 @@ func (this *GroupService) DeleteUser(ownUserId, groupId, userId string) (ok bool
 	shareService.DeleteShareNoteGroupWhenDeleteGroupUser(userId, groupId)
 
 	groupUser := info.GroupUser{}
-	Engine.Where("GroupId=?", groupId).And("UserId=?", userId).Delete(groupUser)
+	db.Engine.Where("GroupId=?", groupId).And("UserId=?", userId).Delete(groupUser)
 	return true, ""
 }

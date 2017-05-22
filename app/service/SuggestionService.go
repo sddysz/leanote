@@ -12,5 +12,5 @@ type SuggestionService struct {
 // 得到某博客具体信息
 func (this *SuggestionService) AddSuggestion(suggestion info.Suggestion) bool {
 
-	return Engine.Insert(&suggestion)
+	return db.Engine.Insert(&suggestion)
 }

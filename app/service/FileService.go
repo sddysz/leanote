@@ -23,7 +23,7 @@ func (this *FileService) AddImage(image info.File, albumId, userId string, needC
 	}
 	image.UserId = userId
 
-	Engine.Insert(&image)
+	db.Engine.Insert(&image)
 	return
 }
 
@@ -170,7 +170,7 @@ func (this *FileService) GetFile(userId, fileId string) string {
 	}
 
 	file := info.File{}
-	Engine.Id(fileId).Get(&file)
+	db.Engine.Id(fileId).Get(&file)
 	path := file.Path
 	if path == "" {
 		return ""
@@ -228,7 +228,7 @@ func (this *FileService) GetFile(userId, fileId string) string {
 	// 可能是刚复制到owner上, 但内容又没有保存, 所以没有note->imageId的映射, 此时看是否有fromFileId
 	if file.FromFileId != "" {
 		fromFile := info.File{}
-		Engine.Id(file.FromFileId).Get(&fromFile)
+		db.Engine.Id(file.FromFileId).Get(&fromFile)
 		if fromFile.UserId == userId {
 			return fromFile.Path
 		}

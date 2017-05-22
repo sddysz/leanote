@@ -82,7 +82,7 @@
 				schema.addValidElements("font[face|size|color|style]");
 			}
 
-			// Add the missing and depreacted align attribute for the serialization engine
+			// Add the missing and depreacted align attribute for the serialization db.Engine
 			tinymce.each(alignElements.split(','), function(name) {
 				var rule = schema.getElementRule(name);
 

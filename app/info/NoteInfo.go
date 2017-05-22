@@ -28,13 +28,13 @@ type Note struct {
 	HasSelfDefined bool   // 是否已经自定义博客图片, desc, abstract
 
 	// 2014/9/28 添加评论社交功能
-	ReadNum    int // 阅读次数 2014/9/28
-	LikeNum    int // 点赞次数 2014/9/28
-	CommentNum int // 评论次数 2014/9/28
+	ReadNum    int64 // 阅读次数 2014/9/28
+	LikeNum    int64 // 点赞次数 2014/9/28
+	CommentNum int64 // 评论次数 2014/9/28
 
 	IsMarkdown bool // 是否是markdown笔记, 默认是false
 
-	AttachNum int // 2014/9/21, attachments num
+	AttachNum int64 // 2014/9/21, attachments num
 
 	CreatedTime   time.Time `xorm:"Created"`
 	UpdatedTime   time.Time `xorm:"updated"`
@@ -43,7 +43,7 @@ type Note struct {
 	UpdatedUserId int64     // 如果共享了, 并可写, 那么可能是其它他修改了
 
 	// 2015/1/15, 更新序号
-	Usn int // UpdateSequenceNum
+	Usn int64 // UpdateSequenceNum
 
 	IsDeleted bool `xorm:"deleted"` // 删除位
 }

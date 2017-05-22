@@ -1,9 +1,9 @@
 package api
 
 import (
+	"github.com/revel/revel"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"github.com/revel/revel"
 	//	"io/ioutil"
 )
 
@@ -66,7 +66,7 @@ func (c ApiNotebook) GetNotebooks() revel.Result {
 // 添加notebook
 // [OK]
 func (c ApiNotebook) AddNotebook(title, parentNotebookId string, seq int) revel.Result {
-	notebook := info.Notebook
+	notebook := info.Notebook{
 		Title:  title,
 		Seq:    seq,
 		UserId: c.getUserId()}

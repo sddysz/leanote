@@ -15743,16 +15743,16 @@ define('extensions/markdownSectionParser',[
         if (R.is(first, "function")) {
             return loaded ? first() : eve.on("raphael.DOMload", first);
         } else if (R.is(first, array)) {
-            return R._engine.create[apply](R, first.splice(0, 3 + R.is(first[0], nu))).add(first);
+            return R._db.Engine.create[apply](R, first.splice(0, 3 + R.is(first[0], nu))).add(first);
         } else {
             var args = Array.prototype.slice.call(arguments, 0);
             if (R.is(args[args.length - 1], "function")) {
                 var f = args.pop();
-                return loaded ? f.call(R._engine.create[apply](R, args)) : eve.on("raphael.DOMload", function () {
-                    f.call(R._engine.create[apply](R, args));
+                return loaded ? f.call(R._db.Engine.create[apply](R, args)) : eve.on("raphael.DOMload", function () {
+                    f.call(R._db.Engine.create[apply](R, args));
                 });
             } else {
-                return R._engine.create[apply](R, arguments);
+                return R._db.Engine.create[apply](R, arguments);
             }
         }
     }
@@ -16203,8 +16203,8 @@ define('extensions/markdownSectionParser',[
         eve("raphael.setWindow", R, g.win, newwin);
         g.win = newwin;
         g.doc = g.win.document;
-        if (R._engine.initWin) {
-            R._engine.initWin(g.win);
+        if (R._db.Engine.initWin) {
+            R._db.Engine.initWin(g.win);
         }
     };
     var toHex = function (color) {
@@ -18060,7 +18060,7 @@ define('extensions/markdownSectionParser',[
      = (array) array of segments.
     \*/
     R.pathToRelative = pathToRelative;
-    R._engine = {};
+    R._db.Engine = {};
     /*\
      * Raphael.path2curve
      [ method ]
@@ -18950,7 +18950,7 @@ define('extensions/markdownSectionParser',[
      | var c = paper.circle(50, 50, 40);
     \*/
     paperproto.circle = function (x, y, r) {
-        var out = R._engine.circle(this, x || 0, y || 0, r || 0);
+        var out = R._db.Engine.circle(this, x || 0, y || 0, r || 0);
         this.__set__ && this.__set__.push(out);
         return out;
     };
@@ -18976,7 +18976,7 @@ define('extensions/markdownSectionParser',[
      | var c = paper.rect(40, 40, 50, 50, 10);
     \*/
     paperproto.rect = function (x, y, w, h, r) {
-        var out = R._engine.rect(this, x || 0, y || 0, w || 0, h || 0, r || 0);
+        var out = R._db.Engine.rect(this, x || 0, y || 0, w || 0, h || 0, r || 0);
         this.__set__ && this.__set__.push(out);
         return out;
     };
@@ -18998,7 +18998,7 @@ define('extensions/markdownSectionParser',[
      | var c = paper.ellipse(50, 50, 40, 20);
     \*/
     paperproto.ellipse = function (x, y, rx, ry) {
-        var out = R._engine.ellipse(this, x || 0, y || 0, rx || 0, ry || 0);
+        var out = R._db.Engine.ellipse(this, x || 0, y || 0, rx || 0, ry || 0);
         this.__set__ && this.__set__.push(out);
         return out;
     };
@@ -19036,7 +19036,7 @@ define('extensions/markdownSectionParser',[
     \*/
     paperproto.path = function (pathString) {
         pathString && !R.is(pathString, string) && !R.is(pathString[0], array) && (pathString += E);
-        var out = R._engine.path(R.format[apply](R, arguments), this);
+        var out = R._db.Engine.path(R.format[apply](R, arguments), this);
         this.__set__ && this.__set__.push(out);
         return out;
     };
@@ -19059,7 +19059,7 @@ define('extensions/markdownSectionParser',[
      | var c = paper.image("apple.png", 10, 10, 80, 80);
     \*/
     paperproto.image = function (src, x, y, w, h) {
-        var out = R._engine.image(this, src || "about:blank", x || 0, y || 0, w || 0, h || 0);
+        var out = R._db.Engine.image(this, src || "about:blank", x || 0, y || 0, w || 0, h || 0);
         this.__set__ && this.__set__.push(out);
         return out;
     };
@@ -19080,7 +19080,7 @@ define('extensions/markdownSectionParser',[
      | var t = paper.text(50, 50, "Raphaël\nkicks\nbutt!");
     \*/
     paperproto.text = function (x, y, text) {
-        var out = R._engine.text(this, x || 0, y || 0, Str(text));
+        var out = R._db.Engine.text(this, x || 0, y || 0, Str(text));
         this.__set__ && this.__set__.push(out);
         return out;
     };
@@ -19151,7 +19151,7 @@ define('extensions/markdownSectionParser',[
      - height (number) new height of the canvas
     \*/
     paperproto.setSize = function (width, height) {
-        return R._engine.setSize.call(this, width, height);
+        return R._db.Engine.setSize.call(this, width, height);
     };
     /*\
      * Paper.setViewBox
@@ -19169,7 +19169,7 @@ define('extensions/markdownSectionParser',[
      - fit (boolean) `true` if you want graphics to fit into new boundary box
     \*/
     paperproto.setViewBox = function (x, y, w, h, fit) {
-        return R._engine.setViewBox.call(this, x, y, w, h, fit);
+        return R._db.Engine.setViewBox.call(this, x, y, w, h, fit);
     };
     /*\
      * Paper.top
@@ -21732,7 +21732,7 @@ define('extensions/markdownSectionParser',[
     Element.prototype = elproto;
     elproto.constructor = Element;
 
-    R._engine.path = function (pathString, SVG) {
+    R._db.Engine.path = function (pathString, SVG) {
         var el = $("path");
         SVG.canvas && SVG.canvas.appendChild(el);
         var p = new Element(el, SVG);
@@ -22198,7 +22198,7 @@ define('extensions/markdownSectionParser',[
         }
         return t;
     };
-    R._engine.circle = function (svg, x, y, r) {
+    R._db.Engine.circle = function (svg, x, y, r) {
         var el = $("circle");
         svg.canvas && svg.canvas.appendChild(el);
         var res = new Element(el, svg);
@@ -22207,7 +22207,7 @@ define('extensions/markdownSectionParser',[
         $(el, res.attrs);
         return res;
     };
-    R._engine.rect = function (svg, x, y, w, h, r) {
+    R._db.Engine.rect = function (svg, x, y, w, h, r) {
         var el = $("rect");
         svg.canvas && svg.canvas.appendChild(el);
         var res = new Element(el, svg);
@@ -22216,7 +22216,7 @@ define('extensions/markdownSectionParser',[
         $(el, res.attrs);
         return res;
     };
-    R._engine.ellipse = function (svg, x, y, rx, ry) {
+    R._db.Engine.ellipse = function (svg, x, y, rx, ry) {
         var el = $("ellipse");
         svg.canvas && svg.canvas.appendChild(el);
         var res = new Element(el, svg);
@@ -22225,7 +22225,7 @@ define('extensions/markdownSectionParser',[
         $(el, res.attrs);
         return res;
     };
-    R._engine.image = function (svg, src, x, y, w, h) {
+    R._db.Engine.image = function (svg, src, x, y, w, h) {
         var el = $("image");
         $(el, {x: x, y: y, width: w, height: h, preserveAspectRatio: "none"});
         el.setAttributeNS(xlink, "href", src);
@@ -22235,7 +22235,7 @@ define('extensions/markdownSectionParser',[
         res.type = "image";
         return res;
     };
-    R._engine.text = function (svg, x, y, text) {
+    R._db.Engine.text = function (svg, x, y, text) {
         var el = $("text");
         svg.canvas && svg.canvas.appendChild(el);
         var res = new Element(el, svg);
@@ -22252,7 +22252,7 @@ define('extensions/markdownSectionParser',[
         setFillAndStroke(res, res.attrs);
         return res;
     };
-    R._engine.setSize = function (width, height) {
+    R._db.Engine.setSize = function (width, height) {
         this.width = width || this.width;
         this.height = height || this.height;
         this.canvas.setAttribute("width", this.width);
@@ -22262,7 +22262,7 @@ define('extensions/markdownSectionParser',[
         }
         return this;
     };
-    R._engine.create = function () {
+    R._db.Engine.create = function () {
         var con = R._getContainer.apply(0, arguments),
             container = con && con.container,
             x = con.x,
@@ -22307,7 +22307,7 @@ define('extensions/markdownSectionParser',[
         container.renderfix();
         return container;
     };
-    R._engine.setViewBox = function (x, y, w, h, fit) {
+    R._db.Engine.setViewBox = function (x, y, w, h, fit) {
         eve("raphael.setViewBox", this, this._viewBox, [x, y, w, h, fit]);
         var size = mmax(w / this.width, h / this.height),
             top = this.top,
@@ -23136,7 +23136,7 @@ define('extensions/markdownSectionParser',[
         return this;
     };
 
-    R._engine.path = function (pathString, vml) {
+    R._db.Engine.path = function (pathString, vml) {
         var el = createNode("shape");
         el.style.cssText = cssDot;
         el.coordsize = zoom + S + zoom;
@@ -23156,7 +23156,7 @@ define('extensions/markdownSectionParser',[
         p.transform(E);
         return p;
     };
-    R._engine.rect = function (vml, x, y, w, h, r) {
+    R._db.Engine.rect = function (vml, x, y, w, h, r) {
         var path = R._rectPath(x, y, w, h, r),
             res = vml.path(path),
             a = res.attrs;
@@ -23169,7 +23169,7 @@ define('extensions/markdownSectionParser',[
         res.type = "rect";
         return res;
     };
-    R._engine.ellipse = function (vml, x, y, rx, ry) {
+    R._db.Engine.ellipse = function (vml, x, y, rx, ry) {
         var res = vml.path(),
             a = res.attrs;
         res.X = x - rx;
@@ -23185,7 +23185,7 @@ define('extensions/markdownSectionParser',[
         });
         return res;
     };
-    R._engine.circle = function (vml, x, y, r) {
+    R._db.Engine.circle = function (vml, x, y, r) {
         var res = vml.path(),
             a = res.attrs;
         res.X = x - r;
@@ -23199,7 +23199,7 @@ define('extensions/markdownSectionParser',[
         });
         return res;
     };
-    R._engine.image = function (vml, src, x, y, w, h) {
+    R._db.Engine.image = function (vml, src, x, y, w, h) {
         var path = R._rectPath(x, y, w, h),
             res = vml.path(path).attr({stroke: "none"}),
             a = res.attrs,
@@ -23222,7 +23222,7 @@ define('extensions/markdownSectionParser',[
         setCoords(res, 1, 1, 0, 0, 0);
         return res;
     };
-    R._engine.text = function (vml, x, y, text) {
+    R._db.Engine.text = function (vml, x, y, text) {
         var el = createNode("shape"),
             path = createNode("path"),
             o = createNode("textpath");
@@ -23263,7 +23263,7 @@ define('extensions/markdownSectionParser',[
         p.transform(E);
         return p;
     };
-    R._engine.setSize = function (width, height) {
+    R._db.Engine.setSize = function (width, height) {
         var cs = this.canvas.style;
         this.width = width;
         this.height = height;
@@ -23273,11 +23273,11 @@ define('extensions/markdownSectionParser',[
         cs.height = height;
         cs.clip = "rect(0 " + width + " " + height + " 0)";
         if (this._viewBox) {
-            R._engine.setViewBox.apply(this, this._viewBox);
+            R._db.Engine.setViewBox.apply(this, this._viewBox);
         }
         return this;
     };
-    R._engine.setViewBox = function (x, y, w, h, fit) {
+    R._db.Engine.setViewBox = function (x, y, w, h, fit) {
         R.eve("raphael.setViewBox", this, this._viewBox, [x, y, w, h, fit]);
         var width = this.width,
             height = this.height,
@@ -23305,7 +23305,7 @@ define('extensions/markdownSectionParser',[
         return this;
     };
     var createNode;
-    R._engine.initWin = function (win) {
+    R._db.Engine.initWin = function (win) {
             var doc = win.document;
             doc.createStyleSheet().addRule(".rvml", "behavior:url(#default#VML)");
             try {
@@ -23319,8 +23319,8 @@ define('extensions/markdownSectionParser',[
                 };
             }
         };
-    R._engine.initWin(R._g.win);
-    R._engine.create = function () {
+    R._db.Engine.initWin(R._g.win);
+    R._db.Engine.create = function () {
         var con = R._getContainer.apply(0, arguments),
             container = con.container,
             height = con.height,

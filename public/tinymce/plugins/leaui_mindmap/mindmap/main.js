@@ -550,7 +550,7 @@ function isArraylike( obj ) {
 }
 var Sizzle =
 /*!
- * Sizzle CSS Selector Engine v1.10.19
+ * Sizzle CSS Selector db.Engine v1.10.19
  * http://sizzlejs.com/
  *
  * Copyright 2013 jQuery Foundation, Inc. and other contributors
@@ -28635,7 +28635,7 @@ CodeMirror.defineMode("gfm", function(config, modeConfig) {
          stream.string.slice(stream.start - 2, stream.start) != "](") {
         // URLs
         // Taken from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-        // And then (issue #1160) simplified to make it not crash the Chrome Regexp engine
+        // And then (issue #1160) simplified to make it not crash the Chrome Regexp db.Engine
         state.combineTokens = true;
         return "link";
       }

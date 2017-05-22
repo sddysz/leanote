@@ -97,7 +97,7 @@ define("tinymce/ui/Factory", [], function() {
 			// #endif
 
 			ControlType = new ControlType(settings);
-			ControlType.type = type; // Set the type on the instance, this will be used by the Selector engine
+			ControlType.type = type; // Set the type on the instance, this will be used by the Selector db.Engine
 
 			return ControlType;
 		}

@@ -510,7 +510,7 @@ func (this *EmailService) SendEmailToEmails(emails []string, subject, body strin
 // 添加邮件日志
 func (this *EmailService) AddEmailLog(email, subject, body string, ok bool, msg string) {
 	log := info.EmailLog{Email: email, Subject: subject, Body: body, Ok: ok, Msg: msg, CreatedTime: time.Now()}
-	Engine.Insert(&log)
+	db.Engine.Insert(&log)
 }
 
 // 展示邮件日志
@@ -521,7 +521,7 @@ func (this *EmailService) DeleteEmails(ids []string) bool {
 		idsO[i] = id
 	}
 	log := info.EmailLog{}
-	Engine.In("Id", idsO).Delete(&log)
+	db.Engine.In("Id", idsO).Delete(&log)
 	return true
 }
 func (this *EmailService) ListEmailLogs(pageNumber, pageSize int, sortField string, isAsc bool, email string) (page info.Page, emailLogs []info.EmailLog) {

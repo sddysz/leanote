@@ -18,11 +18,11 @@ type UserService struct {
 func (this *UserService) IncrUsn(userId string) int {
 
 	user := info.User{}
-	has, err := Engine.Id(userId).Get(&user)
+	has, err := db.Engine.Id(userId).Get(&user)
 	usn := user.Usn
 	usn++
 	Log("inc Usn")
-	has, err := Engine.Id(Id).Cols("usn").Update(&user)
+	has, err := db.Engine.Id(Id).Cols("usn").Update(&user)
 	if err != nil {
 		revel.WARN.Println(has)
 		revel.WARN.Printf("错误: %v", err)
@@ -34,7 +34,7 @@ func (this *UserService) IncrUsn(userId string) int {
 
 func (this *UserService) GetUsn(userId string) int {
 	user := info.User{}
-	has, err := Engine.Id(userId).Get(&user)
+	has, err := db.Engine.Id(userId).Get(&user)
 	return user.Usn
 }
 
@@ -53,7 +53,7 @@ func (this *UserService) AddUser(user info.User) bool {
 			// emailService.SendEmail("life@leanote.com", "新增用户", "{header}用户名"+user.Email+"{footer}")
 		}()
 	}
-	affected, err := Engine.Insert(&user)
+	affected, err := db.Engine.Insert(&user)
 	return err == nil
 }
 
@@ -61,21 +61,21 @@ func (this *UserService) AddUser(user info.User) bool {
 func (this *UserService) GetUserId(email string) string {
 	email = strings.ToLower(email)
 	user := info.User{}
-	Engine.Where("email=?", email).Get(&user)
+	db.Engine.Where("email=?", email).Get(&user)
 	return user.UserId
 }
 
 // 得到用户名
 func (this *UserService) GetUsername(userId string) string {
 	user := info.User{}
-	Engine.Id(userId).Get(&user)
+	db.Engine.Id(userId).Get(&user)
 	return user.Username
 }
 
 // 得到用户名
 func (this *UserService) GetUsernameById(userId int64) string {
 	user := info.User{}
-	Engine.Id(userId).Get(&user)
+	db.Engine.Id(userId).Get(&user)
 	return user.Username
 }
 
@@ -90,7 +90,7 @@ func (this *UserService) IsExistsUser(email string) bool {
 // 是否存在该用户 username
 func (this *UserService) IsExistsUserByUsername(username string) bool {
 	user := info.User{}
-	total, err := Engine.Where("username =?", username).Count(&user)
+	total, err := db.Engine.Where("username =?", username).Count(&user)
 	return total >= 1
 }
 
@@ -123,14 +123,14 @@ func (this *UserService) setUserLogo(user *info.User) {
 // 仅得到用户
 func (this *UserService) GetUser(userId string) info.User {
 	user := info.User{}
-	Engine.Id(userId).Get(&user)
+	db.Engine.Id(userId).Get(&user)
 	return user
 }
 
 // 得到用户信息 userId
 func (this *UserService) GetUserInfo(userId string) info.User {
 	user := info.User{}
-	Engine.Id(userId).Get(&user)
+	db.Engine.Id(userId).Get(&user)
 	// Logo路径问题, 有些有http: 有些没有
 	this.setUserLogo(&user)
 	return user
@@ -139,7 +139,7 @@ func (this *UserService) GetUserInfo(userId string) info.User {
 // 得到用户信息 email
 func (this *UserService) GetUserInfoByEmail(email string) info.User {
 	user := info.User{}
-	Engine.Where("email = ?", email).Get(&user)
+	db.Engine.Where("email = ?", email).Get(&user)
 	// Logo路径问题, 有些有http: 有些没有
 	this.setUserLogo(&user)
 	return user
@@ -149,7 +149,7 @@ func (this *UserService) GetUserInfoByEmail(email string) info.User {
 func (this *UserService) GetUserInfoByUsername(username string) info.User {
 	user := info.User{}
 	username = strings.ToLower(username)
-	Engine.Where("email = ?", username).Get(&user)
+	db.Engine.Where("email = ?", username).Get(&user)
 	// Logo路径问题, 有些有http: 有些没有
 	this.setUserLogo(&user)
 	return user
@@ -157,25 +157,25 @@ func (this *UserService) GetUserInfoByUsername(username string) info.User {
 
 func (this *UserService) GetUserInfoByThirdUserId(thirdUserId string) info.User {
 	user := info.User{}
-	Engine.Where("thirdUserId = ?", thirdUserId).Get(&user)
+	db.Engine.Where("thirdUserId = ?", thirdUserId).Get(&user)
 	this.setUserLogo(&user)
 	return user
 }
 func (this *UserService) ListUserInfosByUserIds(userIds []int64) []info.User {
 	users := make([]info.User{}, 0)
-	Engine.In("userId", userIds).Find(&users)
+	db.Engine.In("userId", userIds).Find(&users)
 	return users
 }
 func (this *UserService) ListUserInfosByEmails(emails []string) []info.User {
 	users := make([]info.User{}, 0)
-	Engine.In("email ?", emails).Find(&user)
+	db.Engine.In("email ?", emails).Find(&user)
 	return users
 }
 
 // 用户信息即可
 func (this *UserService) MapUserInfoByUserIds(userIds []int64) map[int64]info.User {
 	users := make([]info.User{}, 0)
-	Engine.In("userId", userIds).Find(&user)
+	db.Engine.In("userId", userIds).Find(&user)
 
 	userMap := make(map[int64]info.User, len(users))
 	for _, user := range users {
@@ -193,10 +193,10 @@ func (this *UserService) MapUserInfoAndBlogInfosByUserIds(userIds []int64) map[i
 // 返回info.UserAndBlog
 func (this *UserService) MapUserAndBlogByUserIds(userIds []int64) map[string]info.UserAndBlog {
 	users := make([]info.User{}, 0)
-	Engine.In("userId", userIds).Find(&user)
+	db.Engine.In("userId", userIds).Find(&user)
 
 	userBlogs := make([]info.UserBlog{}, 0)
-	Engine.In("userId", userIds).Find(&userBlogs)
+	db.Engine.In("userId", userIds).Find(&userBlogs)
 
 	userBlogMap := make(map[int64]info.UserBlog, len(userBlogs))
 	for _, user := range userBlogs {
@@ -259,7 +259,7 @@ func (this *UserService) GetUserAndBlog(userId string) info.UserAndBlog {
 // 通过ids得到users, 按id的顺序组织users
 func (this *UserService) GetUserInfosOrderBySeq(userIds []int64) []info.User {
 	users := []info.User{}
-	Engine.In("userId", userIds).Find(&user)
+	db.Engine.In("userId", userIds).Find(&user)
 
 	usersMap := map[int64]info.User{}
 	for _, user := range users {
@@ -283,9 +283,9 @@ func (this *UserService) GetUserInfoByName(emailOrUsername string) info.User {
 
 	user := info.User{}
 	if strings.Contains(emailOrUsername, "@") {
-		Engine.Where("email = ?", emailOrUsername).Get(&user)
+		db.Engine.Where("email = ?", emailOrUsername).Get(&user)
 	} else {
-		Engine.Where("Username = ?", emailOrUsername).Get(&user)
+		db.Engine.Where("Username = ?", emailOrUsername).Get(&user)
 	}
 	this.setUserLogo(&user)
 	return user
@@ -301,25 +301,25 @@ func (this *UserService) UpdateUsername(userId, username string) (bool, string) 
 
 	// 先判断是否存在
 	user := new(info.User)
-	total, err := Engine.Where("id >?", 1).Count(user)
+	total, err := db.Engine.Where("id >?", 1).Count(user)
 	if total >= 1 {
 		return false, "usernameIsExisted"
 	}
 
 	user := new(info.User)
-	Engine.Id(userId).Get(user)
+	db.Engine.Id(userId).Get(user)
 	user.username = username
 	user.usernameRaw = usernameRaw
-	affected, err := Engine.Id(userId).Cols("username", "usernameRaw").Update(user)
+	affected, err := db.Engine.Id(userId).Cols("username", "usernameRaw").Update(user)
 	return ok, ""
 }
 
 // 修改头像
 func (this *UserService) UpdateAvatar(userId, avatarPath string) bool {
 	user := new(info.User)
-	Engine.Id(userId).Get(user)
+	db.Engine.Id(userId).Get(user)
 	user.Logo = avatarPath
-	affected, err := Engine.Id(userId).Cols("Logo").Update(user)
+	affected, err := db.Engine.Id(userId).Cols("Logo").Update(user)
 	return err == nil
 }
 
@@ -337,9 +337,9 @@ func (this *UserService) UpdatePwd(userId, oldPwd, pwd string) (bool, string) {
 	}
 
 	user := new(info.User)
-	Engine.Id(userId).Get(user)
+	db.Engine.Id(userId).Get(user)
 	user.Pwd = pwd
-	affected, err := Engine.Id(userId).Cols("Pwd").Update(user)
+	affected, err := db.Engine.Id(userId).Cols("Pwd").Update(user)
 	return err == nil, ""
 }
 
@@ -354,18 +354,18 @@ func (this *UserService) ResetPwd(adminUserId, userId, pwd string) (ok bool, msg
 		return false, "GenerateHash error"
 	}
 	user := new(info.User)
-	Engine.Id(userId).Get(&user)
+	db.Engine.Id(userId).Get(&user)
 	user.Pwd = pwd
-	affected, err := Engine.Id(userId).Cols("Pwd").Update(&user)
+	affected, err := db.Engine.Id(userId).Cols("Pwd").Update(&user)
 	return err == nil, ""
 }
 
 // 修改主题
 func (this *UserService) UpdateTheme(userId, theme string) bool {
 	user := new(info.User)
-	Engine.Id(userId).Get(&user)
+	db.Engine.Id(userId).Get(&user)
 	user.Theme = pwd
-	affected, err := Engine.Id(userId).Cols("Theme").Update(&user)
+	affected, err := db.Engine.Id(userId).Cols("Theme").Update(&user)
 	return err == nil
 }
 
@@ -373,7 +373,7 @@ func (this *UserService) UpdateTheme(userId, theme string) bool {
 func (this *UserService) UpdateAccount(userId, accountType string, accountStartTime, accountEndTime time.Time,
 	maxImageNum, maxImageSize, maxAttachNum, maxAttachSize, maxPerAttachSize int) bool {
 	user := new(info.User)
-	Engine.Id(userId).Get(user)
+	db.Engine.Id(userId).Get(user)
 	user.AccountType = accountType
 	user.AccountStartTime = accountStartTime
 	user.AccountEndTime = accountEndTime
@@ -382,7 +382,7 @@ func (this *UserService) UpdateAccount(userId, accountType string, accountStartT
 	user.MaxAttachNum = maxAttachNum
 	user.MaxAttachSize = maxAttachSize
 	user.MaxPerAttachSize = maxPerAttachSize
-	affected, err := Engine.Id(userId).Cols("AccountType", "AccountStartTime", "AccountEndTime", "MaxImageNum", "MaxImageSize", "MaxAttachNum", "MaxAttachSize", "MaxPerAttachSize").Update(user)
+	affected, err := db.Engine.Id(userId).Cols("AccountType", "AccountStartTime", "AccountEndTime", "MaxImageNum", "MaxImageSize", "MaxAttachNum", "MaxAttachSize", "MaxPerAttachSize").Update(user)
 	return err == nil
 
 }
@@ -405,9 +405,9 @@ func (this *UserService) ActiveEmail(token string) (ok bool, msg, email string) 
 
 		// 修改之, 并将verified = true
 		user := new(info.User)
-		Engine.Id(userInfo.userId).Get(user)
+		db.Engine.Id(userInfo.userId).Get(user)
 		user.Verified = true
-		affected, err := Engine.Id(userInfo.userId).Cols("Verified").Update(user)
+		affected, err := db.Engine.Id(userInfo.userId).Cols("Verified").Update(user)
 
 		return
 	}
@@ -436,7 +436,7 @@ func (this *UserService) UpdateEmail(token string) (ok bool, msg, email string) 
 		user := new(info.User)
 		user.Verified = true
 		user.Email = email
-		affected, err := Engine.Id(userInfo.userId).Cols("Verified").Update(user)
+		affected, err := db.Engine.Id(userInfo.userId).Cols("Verified").Update(user)
 		ok = err == nil
 		return
 	}
@@ -455,7 +455,7 @@ func (this *UserService) UpdateColumnWidth(userId string, notebookWidth, noteLis
 	user.NotebookWidth = notebookWidth
 	user.NoteListWidth = noteListWidth
 	user.MdEditorWidth = mdEditorWidth
-	affected, err := Engine.Id(userInfo.userId).Cols("NotebookWidth", "NoteListWidth", "MdEditorWidth").Update(user)
+	affected, err := db.Engine.Id(userInfo.userId).Cols("NotebookWidth", "NoteListWidth", "MdEditorWidth").Update(user)
 	return err == nil
 }
 
@@ -463,7 +463,7 @@ func (this *UserService) UpdateColumnWidth(userId string, notebookWidth, noteLis
 func (this *UserService) UpdateLeftIsMin(userId string, leftIsMin bool) bool {
 	user := new(info.User)
 	user.LeftIsMin = leftIsMin
-	affected, err := Engine.Id(userInfo.userId).Cols("LeftIsMin").Update(user)
+	affected, err := db.Engine.Id(userInfo.userId).Cols("LeftIsMin").Update(user)
 	return err == nil
 }
 
@@ -473,11 +473,11 @@ func (this *UserService) ListUsers(pageNumber, pageSize int, sortField string, i
 	users = []info.User{}
 	skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
 
-	Engine.Where("Email like ?", "%"+email+"%").Or("Username like ?", "%"+email+"%").Asc(sortField).Limit(skipNum, pageSize).Find(&user)
+	db.Engine.Where("Email like ?", "%"+email+"%").Or("Username like ?", "%"+email+"%").Asc(sortField).Limit(skipNum, pageSize).Find(&user)
 
 	q := db.Users.Find(query)
 	// 总记录数
-	count, _ := Engine.Where("Email like ?", "%"+email+"%").Or("Username like ?", "%"+email+"%").Count(&user)
+	count, _ := db.Engine.Where("Email like ?", "%"+email+"%").Or("Username like ?", "%"+email+"%").Count(&user)
 	page = info.NewPage(pageNumber, pageSize, count, nil)
 	return
 }
@@ -523,6 +523,6 @@ func (this *UserService) GetAllUserByFilter(userFilterEmail, userFilterWhiteList
 // 统计
 func (this *UserService) CountUser() int {
 	user = info.User{}
-	total, err := Engine.Count(&user)
+	total, err := db.Engine.Count(&user)
 	return total
 }

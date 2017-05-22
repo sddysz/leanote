@@ -3,6 +3,7 @@ package service
 import (
 	"time"
 
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
 )
@@ -19,7 +20,7 @@ func (this *NoteService) GetNote(noteId, userId string) (note info.Note) {
 
 // fileService调用
 // 不能是已经删除了的, life bug, 客户端删除后, 竟然还能在web上打开
-func (this *NoteService) GetNoteById(noteId string) (note info.Note) {
+func (this *NoteService) GetNoteById(noteId int64) (note info.Note) {
 	note = info.Note{}
 	if noteId == "" {
 		return
@@ -27,6 +28,7 @@ func (this *NoteService) GetNoteById(noteId string) (note info.Note) {
 	//db.GetByQ(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId), "IsDeleted": false}, &note)
 	return
 }
+
 func (this *NoteService) GetNoteByIdAndUserId(noteId, userId string) (note info.Note) {
 	note = info.Note{}
 	if noteId == "" || userId == "" {
@@ -81,7 +83,7 @@ func (this *NoteService) GetNoteBySrc(src, userId string) (note info.Note) {
 func (this *NoteService) GetNoteAndContentBySrc(src, userId string) (noteId string, noteAndContent info.NoteAndContentSep) {
 	note := this.GetNoteBySrc(src, userId)
 	// if note.NoteId != "" {
-	// 	noteId = note.NoteId 
+	// 	noteId = note.NoteId
 	// 	noteContent := this.GetNoteContent(note.NoteId , userId)
 	// 	return noteId, info.NoteAndContentSep{note, noteContent}
 	// }
@@ -114,7 +116,7 @@ func (this *NoteService) ToApiNotes(notes []info.Note) []info.ApiNote {
 	// 	// 生成info.ApiNote
 	// 	apiNotes := make([]info.ApiNote, len(notes))
 	// 	for i, note := range notes {
-	// 		noteId := note.NoteId 
+	// 		noteId := note.NoteId
 	// 		apiNotes[i] = this.ToApiNote(&note, noteFilesMap[noteId])
 	// 	}
 	// 	return apiNotes
@@ -157,7 +159,7 @@ func (this *NoteService) getFiles(noteIds []int64) map[string][]info.NoteFile {
 	noteFilesMap := map[string][]info.NoteFile{}
 
 	// for _, noteId := range noteIds {
-	// 	noteIdHex := noteId 
+	// 	noteIdHex := noteId
 	// 	noteFiles := []info.NoteFile{}
 	// 	// images
 	// 	if images, ok := noteImages[noteIdHex]; ok {
@@ -290,7 +292,7 @@ func (this *NoteService) AddNote(note info.Note, fromApi bool) info.Note {
 	note.PublicTime = note.UpdatedTime
 	//	}
 
-	Engine.Insert(&note)
+	db.Engine.Insert(&note)
 
 	// tag1
 	tagService.AddTags(note.UserId, note.Tags)
@@ -319,7 +321,7 @@ func (this *NoteService) AddNoteContent(noteContent info.NoteContent) info.NoteC
 	noteContent.UpdatedTime = FixUrlTime(noteContent.UpdatedTime)
 
 	noteContent.UpdatedUserId = noteContent.UserId
-	Engine.Insert(&noteContent)
+	db.Engine.Insert(&noteContent)
 
 	// 更新笔记图片
 	noteImageService.UpdateNoteImages(noteContent.UserId, noteContent.NoteId, "", noteContent.Content)
@@ -347,7 +349,7 @@ func (this *NoteService) AddNoteAndContentApi(note info.Note, noteContent info.N
 	note.Desc = desc;
 
 	// 设为blog
-	notebookId := note.NotebookId 
+	notebookId := note.NotebookId
 	note.IsBlog = notebookService.IsBlog(notebookId)
 
 	if note.IsBlog {
@@ -425,7 +427,7 @@ func (this *NoteService) AddNoteAndContentApi(note info.Note, noteContent info.N
 // 		return false, "notExists", 0
 // 	}
 
-// 	userId := note.UserId 
+// 	userId := note.UserId
 // 	// updatedUserId 要修改userId的note, 此时需要判断是否有修改权限
 // 	if userId != updatedUserId {
 // 		if !shareService.HasUpdatePerm(userId, updatedUserId, noteId) {
@@ -544,7 +546,7 @@ func (this *NoteService) UpdateNoteContentIsBlog(noteId, userId string, isBlog b
 }
 
 // 附件修改, 增加noteIncr
-func (this *NoteService) IncrNoteUsn(noteId, userId string) int {
+func (this *NoteService) IncrNoteUsn(noteId, userId int64) int64 {
 	afterUsn := userService.IncrUsn(userId)
 	// db.UpdateByIdAndUserIdMap(db.Notes, noteId, userId,
 	// 	bson.M{"UpdatedTime": time.Now(), "Usn": afterUsn})
@@ -676,7 +678,7 @@ func (this *NoteService) ToBlog(userId, noteId string, isBlog, isTop bool) bool 
 func (this *NoteService) MoveNote(noteId, notebookId, userId string) info.Note {
 	// if notebookService.IsMyNotebook(notebookId, userId) {
 	// 	note := this.GetNote(noteId, userId)
-	// 	preNotebookId := note.NotebookId 
+	// 	preNotebookId := note.NotebookId
 
 	// 	re := db.UpdateByIdAndUserId(db.Notes, noteId, userId,
 	// 		bson.M{"$set": bson.M{"IsTrash": false,

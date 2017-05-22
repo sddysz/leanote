@@ -110,7 +110,7 @@ tinymce.PluginManager.add('layer', function(editor) {
 			'class': 'mceItemVisualAid mceItemLayer'
 		}, editor.selection.getContent() || editor.getLang('layer.content'));
 
-		// Workaround for IE where it messes up the JS engine if you insert a layer on IE 6,7
+		// Workaround for IE where it messes up the JS db.Engine if you insert a layer on IE 6,7
 		if (tinymce.Env.ie) {
 			dom.setHTML(body, body.innerHTML);
 		}

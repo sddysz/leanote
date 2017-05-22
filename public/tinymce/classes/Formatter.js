@@ -9,8 +9,8 @@
  */
 
 /**
- * Text formatter engine class. This class is used to apply formats like bold, italic, font size
- * etc to the current selection or specific nodes. This engine was build to replace the browsers
+ * Text formatter db.Engine class. This class is used to apply formats like bold, italic, font size
+ * etc to the current selection or specific nodes. This db.Engine was build to replace the browsers
  * default formatting logic for execCommand due to it's inconsistent and buggy behavior.
  *
  * @class tinymce.Formatter
@@ -34,7 +34,7 @@ define("tinymce/Formatter", [
 	 * Constructs a new formatter instance.
 	 *
 	 * @constructor Formatter
-	 * @param {tinymce.Editor} ed Editor instance to construct the formatter engine to.
+	 * @param {tinymce.Editor} ed Editor instance to construct the formatter db.Engine to.
 	 */
 	return function(ed) {
 		var formats = {},

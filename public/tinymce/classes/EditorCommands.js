@@ -325,7 +325,7 @@ define("tinymce/EditorCommands", [
 				formatter.remove("link");
 			},
 
-			// Override justify commands to use the text formatter engine
+			// Override justify commands to use the text formatter db.Engine
 			'JustifyLeft,JustifyCenter,JustifyRight,JustifyFull': function(command) {
 				var align = command.substring(7);
 
@@ -366,12 +366,12 @@ define("tinymce/EditorCommands", [
 				}
 			},
 
-			// Override commands to use the text formatter engine
+			// Override commands to use the text formatter db.Engine
 			'Bold,Italic,Underline,Strikethrough,Superscript,Subscript': function(command) {
 				toggleFormat(command);
 			},
 
-			// Override commands to use the text formatter engine
+			// Override commands to use the text formatter db.Engine
 			'ForeColor,HiliteColor,FontName': function(command, ui, value) {
 				toggleFormat(command, value);
 			},

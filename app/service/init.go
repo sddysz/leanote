@@ -149,15 +149,15 @@ func getUniqueUrlTitle(userId string, urlTitle string, types string, padding int
 	var rows *core.Rows
 	if types == "note" {
 		note := new(info.Note)
-		rows, err := engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(note)
+		rows, err := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(note)
 		defer rows.Close()
 	} else if types == "notebook" {
 		notebook := new(info.Notebook)
-		rows, err := engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(notebook)
+		rows, err := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(notebook)
 		defer rows.Close()
 	} else if types == "single" {
 		blogSingle := new(info.BlogSingle)
-		rows, err := engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(blogSingle)
+		rows, err := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(blogSingle)
 		defer rows.Close()
 	}
 	for rows.Next() { // 用户下唯一
