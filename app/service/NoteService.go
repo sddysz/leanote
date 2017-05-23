@@ -22,21 +22,17 @@ func (this *NoteService) GetNote(noteId, userId string) (note info.Note) {
 // 不能是已经删除了的, life bug, 客户端删除后, 竟然还能在web上打开
 func (this *NoteService) GetNoteById(noteId int64) (note info.Note) {
 	note = info.Note{}
-	if noteId == "" {
-		return
-	}
-	//db.GetByQ(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId), "IsDeleted": false}, &note)
+
+	db.Engine.Id(noteId).Get(&note)
 	return
 }
 
-func (this *NoteService) GetNoteByIdAndUserId(noteId, userId string) (note info.Note) {
-	note = info.Note{}
-	if noteId == "" || userId == "" {
-		return
-	}
-	//db.GetByQ(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId), "UserId": bson.ObjectIdHex(userId), "IsDeleted": false}, &note)
-	return
-}
+// func (this *NoteService) GetNoteByIdAndUserId(noteId int64) (note info.Note) {
+// 	note = info.Note{}
+// 	db.Engine.Id(noteId).Get(&note)
+// 	//db.GetByQ(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId), "UserId": bson.ObjectIdHex(userId), "IsDeleted": false}, &note)
+// 	return
+// }
 
 // 得到blog, blogService用
 // 不要传userId, 因为是公开的

@@ -62,19 +62,16 @@ func (this *AttachService) updateNoteAttachNum(noteId int64, addNum int) bool {
 }
 
 // list attachs
-func (this *AttachService) ListAttachs(noteId, userId string) []info.Attach {
+func (this *AttachService) ListAttachs(noteId, userId int64) []info.Attach {
 	attachs := []info.Attach{}
 
 	// 判断是否有权限为笔记添加附件, userId为空时表示是分享笔记的附件
-	if userId != "" && !shareService.HasUpdateNotePerm(noteId, userId) {
-		return attachs
-	}
+	// if userId != "" && !shareService.HasUpdateNotePerm(noteId, userId) {
+	// 	return attachs
+	// }
 
 	// 笔记是否是自己的
-	note := noteService.GetNoteByIdAndUserId(noteId, userId)
-	if note.NoteId == "" {
-		return attachs
-	}
+	note := noteService.GetNoteById(noteId)
 
 	// TODO 这里, 优化权限控制
 
@@ -83,10 +80,10 @@ func (this *AttachService) ListAttachs(noteId, userId string) []info.Attach {
 }
 
 // api调用, 通过noteIds得到note's attachs, 通过noteId归类返回
-func (this *AttachService) getAttachsByNoteIds(noteIds []int64) map[string][]info.Attach {
+func (this *AttachService) getAttachsByNoteIds(noteIds []int64) map[int64][]info.Attach {
 	attachs := []info.Attach{}
 	db.Engine.In("NoteId", noteIds).Find(&attachs)
-	noteAttchs := make(map[string][]info.Attach)
+	noteAttchs := make(map[int64][]info.Attach)
 	for _, attach := range attachs {
 		noteId := attach.NoteId
 		if itAttachs, ok := noteAttchs[noteId]; ok {
@@ -106,7 +103,7 @@ func (this *AttachService) UpdateImageTitle(userId, fileId, title string) bool {
 }
 
 // Delete note to delete attas firstly
-func (this *AttachService) DeleteAllAttachs(noteId, userId string) bool {
+func (this *AttachService) DeleteAllAttachs(noteId, userId int64) bool {
 	note := noteService.GetNoteById(noteId)
 	if note.UserId == userId {
 		attachs := []info.Attach{}
@@ -123,42 +120,39 @@ func (this *AttachService) DeleteAllAttachs(noteId, userId string) bool {
 
 // delete attach
 // 删除附件为什么要incrNoteUsn ? 因为可能没有内容要修改的
-func (this *AttachService) DeleteAttach(attachId, userId string) (bool, string) {
+func (this *AttachService) DeleteAttach(attachId, userId int64) (bool, string) {
 	attach := info.Attach{}
 
 	db.Engine.Id(attachId).Get(&attach)
 
-	if attach.AttachId != "" {
-		// 判断是否有权限为笔记添加附件
-		if !shareService.HasUpdateNotePerm(attach.NoteId, userId) {
-			return false, "No Perm"
-		}
+	// if attach.AttachId != "" {
+	// 	// 判断是否有权限为笔记添加附件
+	// 	if !shareService.HasUpdateNotePerm(attach.NoteId, userId) {
+	// 		return false, "No Perm"
+	// 	}
 
-		if affected, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
-			this.updateNoteAttachNum(attach.NoteId, -1)
-			attach.Path = strings.TrimLeft(attach.Path, "/")
-			err := os.Remove(revel.BasePath + "/" + attach.Path)
-			if err == nil {
-				// userService.UpdateAttachSize(note.UserId , -attach.Size)
-				// 修改note Usn
-				noteService.IncrNoteUsn(attach.NoteId, userId)
+	if affected, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
+		this.updateNoteAttachNum(attach.NoteId, -1)
+		attach.Path = strings.TrimLeft(attach.Path, "/")
+		err := os.Remove(revel.BasePath + "/" + attach.Path)
+		if err == nil {
+			// userService.UpdateAttachSize(note.UserId , -attach.Size)
+			// 修改note Usn
+			noteService.IncrNoteUsn(attach.NoteId, userId)
 
-				return true, "delete file success"
-			}
-			return false, "delete file error"
+			return true, "delete file success"
 		}
-		return false, "db error"
+		return false, "delete file error"
 	}
+	return false, "db error"
+	// }
 	return false, "no such item"
 }
 
 // 获取文件路径
 // 要判断是否具有权限
 // userId是否具有attach的访问权限
-func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attach) {
-	if attachId == "" {
-		return
-	}
+func (this *AttachService) GetAttach(attachId, userId int64) (attach info.Attach) {
 
 	attach = info.Attach{}
 	db.Engine.Id(attachId).Get(&attach)
@@ -182,9 +176,9 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 	}
 
 	// 我是否有权限查看或协作
-	if shareService.HasReadNotePerm(attach.NoteId, userId) {
-		return
-	}
+	// if shareService.HasReadNotePerm(attach.NoteId, userId) {
+	// 	return
+	// }
 
 	attach = info.Attach{}
 	return
@@ -192,12 +186,12 @@ func (this *AttachService) GetAttach(attachId, userId string) (attach info.Attac
 
 // 复制笔记时需要复制附件
 // noteService调用, 权限已判断
-func (this *AttachService) CopyAttachs(noteId, toNoteId, toUserId string) bool {
+func (this *AttachService) CopyAttachs(noteId, toNoteId, toUserId int64) bool {
 	attachs := []info.Attach{}
 	db.Engine.Where("NoteId=?", noteId).Find(&attachs)
 	// 复制之
 	for _, attach := range attachs {
-		attach.AttachId = ""
+		attach.AttachId = nil
 		attach.NoteId = toNoteId
 
 		// 文件复制一份
