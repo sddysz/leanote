@@ -66,9 +66,9 @@ type UserBlog struct {
 // 博客统计信息
 type BlogStat struct {
 	NoteId     int64 `xorm:"pk"`
-	ReadNum    int   // 阅读次数 2014/9/28
-	LikeNum    int   // 点赞次数 2014/9/28
-	CommentNum int   // 评论次数 2014/9/28
+	ReadNum    int64 // 阅读次数 2014/9/28
+	LikeNum    int64 // 点赞次数 2014/9/28
+	CommentNum int64 // 评论次数 2014/9/28
 }
 
 // 单页

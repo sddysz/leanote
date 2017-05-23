@@ -88,9 +88,9 @@ type NoteContentHistory struct {
 // 肯定会传userId(谁的), NoteId
 // 会传Title, Content, Tags, 一种或几种
 type NoteOrContent struct {
-	NotebookId string
-	NoteId     string
-	UserId     string
+	NotebookId int64
+	NoteId     int64
+	UserId     int64
 	Title      string
 	Desc       string
 	Src        string
@@ -100,8 +100,8 @@ type NoteOrContent struct {
 	Abstract   string
 	IsNew      bool
 	IsMarkdown bool
-	FromUserId string // 为共享而新建
-	IsBlog     bool   // 是否是blog, 更新note不需要修改, 添加note时才有可能用到, 此时需要判断notebook是否设为Blog
+	FromUserId int64 // 为共享而新建
+	IsBlog     bool  // 是否是blog, 更新note不需要修改, 添加note时才有可能用到, 此时需要判断notebook是否设为Blog
 }
 
 // 分开的

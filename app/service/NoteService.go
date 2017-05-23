@@ -29,9 +29,9 @@ func (this *NoteService) GetNoteById(noteId int64) (note info.Note) {
 	return
 }
 
-func (this *NoteService) GetNoteByIdAndUserId(noteId, userId string) (note info.Note) {
+func (this *NoteService) GetNoteByIdAndUserId(noteId, userId int64) (note info.Note) {
 	note = info.Note{}
-	if noteId == "" || userId == "" {
+	if noteId == 0 || userId == 0 {
 		return
 	}
 	//db.GetByQ(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId), "UserId": bson.ObjectIdHex(userId), "IsDeleted": false}, &note)
@@ -40,7 +40,7 @@ func (this *NoteService) GetNoteByIdAndUserId(noteId, userId string) (note info.
 
 // 得到blog, blogService用
 // 不要传userId, 因为是公开的
-func (this *NoteService) GetBlogNote(noteId string) (note info.Note) {
+func (this *NoteService) GetBlogNote(noteId int64) (note info.Note) {
 	note = info.Note{}
 	//db.GetByQ(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId),
 	//	"IsBlog": true, "IsTrash": false, "IsDeleted": false}, &note)
@@ -48,7 +48,7 @@ func (this *NoteService) GetBlogNote(noteId string) (note info.Note) {
 }
 
 // 通过id, userId得到noteContent
-func (this *NoteService) GetNoteContent(noteContentId, userId string) (noteContent info.NoteContent) {
+func (this *NoteService) GetNoteContent(noteContentId, userId int64) (noteContent info.NoteContent) {
 	noteContent = info.NoteContent{}
 	//db.GetByIdAndUserId(db.NoteContents, noteContentId, userId, &noteContent)
 	return
@@ -191,7 +191,7 @@ func (this *NoteService) getFiles(noteIds []int64) map[string][]info.NoteFile {
 
 // 列出note, 排序规则, 还有分页
 // CreatedTime, UpdatedTime, title 来排序
-func (this *NoteService) ListNotes(userId, notebookId string,
+func (this *NoteService) ListNotes(userId, notebookId int64,
 	isTrash bool, pageNumber, pageSize int, sortField string, isAsc bool, isBlog bool) (count int, notes []info.Note) {
 	notes = []info.Note{}
 	skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
