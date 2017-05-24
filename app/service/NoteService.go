@@ -12,7 +12,7 @@ type NoteService struct {
 }
 
 // 通过id, userId得到note
-func (this *NoteService) GetNote(noteId, userId string) (note info.Note) {
+func (this *NoteService) GetNote(noteId, userId int64) (note info.Note) {
 	note = info.Note{}
 	//db.GetByIdAndUserId(db.Notes, noteId, userId, &note)
 	return
@@ -53,7 +53,7 @@ func (this *NoteService) GetNoteContent(noteContentId, userId int64) (noteConten
 }
 
 // 得到笔记和内容
-func (this *NoteService) GetNoteAndContent(noteId, userId string) (noteAndContent info.NoteAndContent) {
+func (this *NoteService) GetNoteAndContent(noteId, userId int64) (noteAndContent info.NoteAndContent) {
 	note := this.GetNote(noteId, userId)
 	noteContent := this.GetNoteContent(noteId, userId)
 	return info.NoteAndContent{note, noteContent}

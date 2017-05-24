@@ -16,9 +16,9 @@ type NoteFile struct {
 	IsAttach    bool // 是否是附件, 不是附件就是图片
 }
 type ApiNote struct {
-	NoteId     string
-	NotebookId string
-	UserId     string
+	NoteId     int64
+	NotebookId int64
+	UserId     int64
 	Title      string
 	Desc       string
 	//	ImgSrc     string
@@ -30,7 +30,7 @@ type ApiNote struct {
 	IsBlog      bool // 是否是blog, 更新note不需要修改, 添加note时才有可能用到, 此时需要判断notebook是否设为Blog
 	IsTrash     bool
 	IsDeleted   bool
-	Usn         int
+	Usn         int64
 	Files       []NoteFile
 	CreatedTime time.Time
 	UpdatedTime time.Time
@@ -73,13 +73,13 @@ type ApiNotebook struct {
 	NotebookId       int64 `xorm:"pk"` // 必须要设置bson:"_id" 不然mgo不会认为是主键
 	UserId           int64
 	ParentNotebookId int64     // 上级
-	Seq              int       // 排序
+	Seq              int64     // 排序
 	Title            string    // 标题
 	UrlTitle         string    // Url标题 2014/11.11加
 	IsBlog           bool      // 是否是Blog 2013/12/29 新加
 	CreatedTime      time.Time `xorm:"created"`
 	UpdatedTime      time.Time `xorm:"updated"`
-	Usn              int       // UpdateSequenceNum
+	Usn              int64     // UpdateSequenceNum
 	IsDeleted        bool      `xorm:"deleted"`
 }
 
@@ -110,7 +110,7 @@ type AuthOk struct {
 type ReUpdate struct {
 	Ok  bool
 	Msg string
-	Usn int
+	Usn int64
 }
 
 func NewReUpdate() ReUpdate {

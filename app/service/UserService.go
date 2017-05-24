@@ -121,14 +121,14 @@ func (this *UserService) setUserLogo(user *info.User) {
 }
 
 // 仅得到用户
-func (this *UserService) GetUser(userId string) info.User {
+func (this *UserService) GetUser(userId int64) info.User {
 	user := info.User{}
 	db.Engine.Id(userId).Get(&user)
 	return user
 }
 
 // 得到用户信息 userId
-func (this *UserService) GetUserInfo(userId string) info.User {
+func (this *UserService) GetUserInfo(userId int64) info.User {
 	user := info.User{}
 	db.Engine.Id(userId).Get(&user)
 	// Logo路径问题, 有些有http: 有些没有

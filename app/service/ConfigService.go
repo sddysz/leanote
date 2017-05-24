@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"github.com/revel/revel"
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
 )
 
 // 配置服务
 // 只是全局的, 用户的配置没有
 type ConfigService struct {
-	adminUserId   string
+	adminUserId   int64
 	siteUrl       string
 	adminUsername string
 	// 全局的
@@ -42,10 +42,10 @@ func (this *ConfigService) InitGlobalConfigs() bool {
 	this.siteUrl, _ = revel.Config.String("site.url")
 
 	userInfo := userService.GetUserInfoByAny(this.adminUsername)
-	if userInfo.UserId == "" {
+	if userInfo.UserId == 0 {
 		return false
 	}
-	this.adminUserId = userInfo.UserId 
+	this.adminUserId = userInfo.UserId
 
 	configs := []info.Config{}
 	// db.ListByQ(db.Configs, bson.M{"UserId": userInfo.UserId}, &configs)
@@ -86,82 +86,82 @@ func (this *ConfigService) GetSiteUrl() string {
 func (this *ConfigService) GetAdminUsername() string {
 	return this.adminUsername
 }
-func (this *ConfigService) GetAdminUserId() string {
+func (this *ConfigService) GetAdminUserId() int64 {
 	return this.adminUserId
 }
 
 // 通用方法
-func (this *ConfigService) updateGlobalConfig(userId, key string, value interface{}, isArr, isMap, isArrMap bool) bool {
+func (this *ConfigService) updateGlobalConfig(userId int64, key string, value interface{}, isArr, isMap, isArrMap bool) bool {
 	// 判断是否存在
-	if _, ok := this.GlobalAllConfigs[key]; !ok {
-		// 需要添加
-		config := info.Config{
-			UserId:      userId, // 没用
-			Key:         key,
-			IsArr:       isArr,
-			IsMap:       isMap,
-			IsArrMap:    isArrMap,
-			UpdatedTime: time.Now(),
-		}
-		if isArr {
-			v, _ := value.([]string)
-			config.ValueArr = v
-			this.GlobalArrayConfigs[key] = v
-		} else if isMap {
-			v, _ := value.(map[string]string)
-			config.ValueMap = v
-			this.GlobalMapConfigs[key] = v
-		} else if isArrMap {
-			v, _ := value.([]map[string]string)
-			config.ValueArrMap = v
-			this.GlobalArrMapConfigs[key] = v
-		} else {
-			v, _ := value.(string)
-			config.ValueStr = v
-			this.GlobalStringConfigs[key] = v
-		}
-		affected, err := db.Engine.Insert(&config)
-		return err == nil
-	} else {
-		//i := bson.M{"UpdatedTime": time.Now()}
-		this.GlobalAllConfigs[key] = value
-		if isArr {
-			v, _ := value.([]string)
-			i["ValueArr"] = v
-			this.GlobalArrayConfigs[key] = v
-		} else if isMap {
-			v, _ := value.(map[string]string)
-			i["ValueMap"] = v
-			this.GlobalMapConfigs[key] = v
-		} else if isArrMap {
-			v, _ := value.([]map[string]string)
-			i["ValueArrMap"] = v
-			this.GlobalArrMapConfigs[key] = v
-		} else {
-			v, _ := value.(string)
-			i["ValueStr"] = v
-			this.GlobalStringConfigs[key] = v
-		}
-		// return db.UpdateByQMap(db.Configs, bson.M{"UserId": bson.ObjectIdHex(userId), "Key": key}, i)
-		affected, err = db.Engine.Where("Key=?", key).Update(config)
-		return err == nil
+	// if _, ok := this.GlobalAllConfigs[key]; !ok {
+	// 需要添加
+	config := info.Config{
+		UserId:      userId, // 没用
+		Key:         key,
+		IsArr:       isArr,
+		IsMap:       isMap,
+		IsArrMap:    isArrMap,
+		UpdatedTime: time.Now(),
 	}
+	// if isArr {
+	// 	v, _ := value.([]string)
+	// 	config.ValueArr = v
+	// 	this.GlobalArrayConfigs[key] = v
+	// } else if isMap {
+	// 	v, _ := value.(map[string]string)
+	// 	config.ValueMap = v
+	// 	this.GlobalMapConfigs[key] = v
+	// } else if isArrMap {
+	// 	v, _ := value.([]map[string]string)
+	// 	config.ValueArrMap = v
+	// 	this.GlobalArrMapConfigs[key] = v
+	// } else {
+	// 	v, _ := value.(string)
+	// 	config.ValueStr = v
+	// 	this.GlobalStringConfigs[key] = v
+	// }
+	affected, err := db.Engine.Insert(&config)
+	return err == nil
+	// } //else {
+	//i := bson.M{"UpdatedTime": time.Now()}
+	this.GlobalAllConfigs[key] = value
+	// if isArr {
+	// 	v, _ := value.([]string)
+	// 	i["ValueArr"] = v
+	// 	this.GlobalArrayConfigs[key] = v
+	// } else if isMap {
+	// 	v, _ := value.(map[string]string)
+	// 	i["ValueMap"] = v
+	// 	this.GlobalMapConfigs[key] = v
+	// } else if isArrMap {
+	// 	v, _ := value.([]map[string]string)
+	// 	i["ValueArrMap"] = v
+	// 	this.GlobalArrMapConfigs[key] = v
+	// } else {
+	// 	v, _ := value.(string)
+	// 	i["ValueStr"] = v
+	// 	this.GlobalStringConfigs[key] = v
+	// }
+	// return db.UpdateByQMap(db.Configs, bson.M{"UserId": bson.ObjectIdHex(userId), "Key": key}, i)
+	affected, err = db.Engine.Where("Key=?", key).Update(&config)
+	return err == nil
+	//}
 }
 
 // 更新用户配置
-func (this *ConfigService) UpdateGlobalStringConfig(userId, key string, value string) bool {
+func (this *ConfigService) UpdateGlobalStringConfig(userId int64, key string, value string) bool {
 	//return this.updateGlobalConfig(userId, key, value, false, false, false)
 	return true
 }
-func (this *ConfigService) UpdateGlobalArrayConfig(userId, key string, value []string) bool {
+func (this *ConfigService) UpdateGlobalArrayConfig(userId int64, key string, value []string) bool {
 	//return this.updateGlobalConfig(userId, key, value, true, false, false)
 	return true
 }
-func (this *ConfigService) UpdateGlobalMapConfig(userId, key string, value map[string]string) bool {
+func (this *ConfigService) UpdateGlobalMapConfig(userId int64, key string, value map[string]string) bool {
 	//return this.updateGlobalConfig(userId, key, value, false, true, false)
 	return true
 }
-func (this *ConfigService) UpdateGlobalArrMapConfig(userId, key string, value []map[string]string) bool {
+func (this *ConfigService) UpdateGlobalArrMapConfig(userId int64, key string, value []map[string]string) bool {
 	//return this.updateGlobalConfig(userId, key, value, false, false, true)
 	return true
 }
@@ -339,13 +339,13 @@ func (this *ConfigService) Backup(remark string) (ok bool, msg string) {
 	}
 
 	cmd := exec.Command("/bin/sh", "-c", binPath)
-	Log(binPath)
+	// Log(binPath)
 	b, err := cmd.Output()
 	if err != nil {
 		msg = fmt.Sprintf("%v", err)
 		ok = false
-		Log("error:......")
-		Log(string(b))
+		// Log("error:......")
+		// Log(string(b))
 		return
 	}
 	ok = configService.AddBackup(dir, remark)
@@ -388,20 +388,20 @@ func (this *ConfigService) Restore(createdTime string) (ok bool, msg string) {
 
 	path := backup["path"] + "/" + dbname
 	// 判断路径是否存在
-	if !IsDirExists(path) {
-		return false, path + " Is Not Exists"
-	}
+	// if !IsDirExists(path) {
+	// 	return false, path + " Is Not Exists"
+	// }
 
 	binPath += " " + path
 
 	cmd := exec.Command("/bin/sh", "-c", binPath)
-	Log(binPath)
+	// Log(binPath)
 	b, err := cmd.Output()
 	if err != nil {
 		msg = fmt.Sprintf("%v", err)
 		ok = false
-		Log("error:......")
-		Log(string(b))
+		// Log("error:......")
+		// Log(string(b))
 		return
 	}
 
@@ -563,7 +563,7 @@ func (this *ConfigService) IsGoodCustomDomain(domain string) bool {
 }
 func (this *ConfigService) IsGoodSubDomain(domain string) bool {
 	blacks := this.GetGlobalArrayConfig("blackSubDomains")
-	LogJ(blacks)
+	// LogJ(blacks)
 	for _, black := range blacks {
 		if domain == black {
 			return false

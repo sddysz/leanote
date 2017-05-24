@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	//	. "github.com/sddysz/leanote/app/lea"
 	//	"strings"
@@ -12,7 +13,7 @@ type GroupService struct {
 }
 
 // 添加分组
-func (this *GroupService) AddGroup(userId, title string) (bool, info.Group) {
+func (this *GroupService) AddGroup(userId int64, title string) (bool, info.Group) {
 	group := info.Group{
 		UserId: userId,
 		Title:  title,
@@ -35,8 +36,8 @@ func (this *GroupService) DeleteGroup(userId, groupId string) (ok bool, msg stri
 
 	// 删除分组后, 需要删除所有用户分享到该组的笔记本, 笔记
 
-	shareService.DeleteAllShareNotebookGroup(groupId)
-	shareService.DeleteAllShareNoteGroup(groupId)
+	// shareService.DeleteAllShareNotebookGroup(groupId)
+	// shareService.DeleteAllShareNoteGroup(groupId)
 
 	group := info.Group{}
 	affected, err := db.Engine.Id(groupId).Delete(group)
@@ -46,13 +47,13 @@ func (this *GroupService) DeleteGroup(userId, groupId string) (ok bool, msg stri
 }
 
 // 修改group标题
-func (this *GroupService) UpdateGroupTitle(userId, groupId, title string) (ok bool) {
+func (this *GroupService) UpdateGroupTitle(userId, groupId int64, title string) (ok bool) {
 	//return db.UpdateByIdAndUserIdField(db.Groups, groupId, userId, "Title", title)
 	return true
 }
 
 // 得到用户的所有分组(包括下的所有用户)
-func (this *GroupService) GetGroupsAndUsers(userId string) []info.Group {
+func (this *GroupService) GetGroupsAndUsers(userId int64) []info.Group {
 	/*
 		// 得到我的分组
 		groups := []info.Group{}
@@ -70,7 +71,7 @@ func (this *GroupService) GetGroupsAndUsers(userId string) []info.Group {
 }
 
 // 仅仅得到所有分组
-func (this *GroupService) GetGroups(userId string) []info.Group {
+func (this *GroupService) GetGroups(userId int64) []info.Group {
 	// 得到分组s
 	groups := []info.Group{}
 	db.Engine.Where("UserId=?", userId).Find(&groups)
@@ -78,7 +79,7 @@ func (this *GroupService) GetGroups(userId string) []info.Group {
 }
 
 // 得到我的和我所属组的ids
-func (this *GroupService) GetMineAndBelongToGroupIds(userId string) []int64 {
+func (this *GroupService) GetMineAndBelongToGroupIds(userId int64) []int64 {
 	// 所属组
 	groupIds := this.GetBelongToGroupIds(userId)
 
@@ -101,7 +102,7 @@ func (this *GroupService) GetMineAndBelongToGroupIds(userId string) []int64 {
 
 // 获取包含此用户的组对象数组
 // 获取该用户所属组, 和我的组
-func (this *GroupService) GetGroupsContainOf(userId string) []info.Group {
+func (this *GroupService) GetGroupsContainOf(userId int64) []info.Group {
 	// 我的组
 	myGroups := this.GetGroups(userId)
 	myGroupMap := map[int64]bool{}
@@ -115,7 +116,7 @@ func (this *GroupService) GetGroupsContainOf(userId string) []info.Group {
 
 	groups := []info.Group{}
 
-	db.Engine.In("Id", groupIds).Find(&group)
+	db.Engine.In("Id", groupIds).Find(&groups)
 	for _, group := range groups {
 		if !myGroupMap[group.GroupId] {
 			myGroups = append(myGroups, group)
@@ -134,7 +135,7 @@ func (this *GroupService) GetGroup(userId, groupId string) info.Group {
 }
 
 // 得到某分组下的用户
-func (this *GroupService) GetUsers(groupId string) []info.User {
+func (this *GroupService) GetUsers(groupId int64) []info.User {
 	// 得到UserIds
 	// groupUsers := []info.GroupUser{}
 	// db.ListByQWithFields(db.GroupUsers, bson.M{"GroupId": bson.ObjectIdHex(groupId)}, []string{"UserId"}, &groupUsers)
@@ -151,7 +152,7 @@ func (this *GroupService) GetUsers(groupId string) []info.User {
 }
 
 // 得到我所属的所有分组ids
-func (this *GroupService) GetBelongToGroupIds(userId string) []int64 {
+func (this *GroupService) GetBelongToGroupIds(userId int64) []int64 {
 	// 得到UserIds
 	groupUsers := []info.GroupUser{}
 	db.Engine.Where("UserId=?", userId).Find(&groupUsers)
@@ -219,9 +220,9 @@ func (this *GroupService) DeleteUser(ownUserId, groupId, userId string) (ok bool
 		return false, "forbiddenNotMyGroup"
 	}
 
-	// 删除该用户分享到本组的笔记本, 笔记
-	shareService.DeleteShareNotebookGroupWhenDeleteGroupUser(userId, groupId)
-	shareService.DeleteShareNoteGroupWhenDeleteGroupUser(userId, groupId)
+	// // 删除该用户分享到本组的笔记本, 笔记
+	// shareService.DeleteShareNotebookGroupWhenDeleteGroupUser(userId, groupId)
+	// shareService.DeleteShareNoteGroupWhenDeleteGroupUser(userId, groupId)
 
 	groupUser := info.GroupUser{}
 	db.Engine.Where("GroupId=?", groupId).And("UserId=?", userId).Delete(groupUser)

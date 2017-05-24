@@ -3,8 +3,8 @@ package service
 import (
 	"time"
 
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
 )
 
 // token
@@ -15,7 +15,7 @@ type TokenService struct {
 }
 
 // 生成token
-func (this *TokenService) NewToken(userId string, email string, tokenType int) string {
+func (this *TokenService) NewToken(userId int64, email string, tokenType int) string {
 	token := info.Token{UserId: userId, Token: NewGuidWith(email), CreatedTime: time.Now(), Email: email, Type: tokenType}
 
 	// if db.Upsert(db.Tokens, bson.M{"_id": token.UserId}, token) {
@@ -26,7 +26,7 @@ func (this *TokenService) NewToken(userId string, email string, tokenType int) s
 }
 
 // 删除token
-func (this *TokenService) DeleteToken(userId string, tokenType int) bool {
+func (this *TokenService) DeleteToken(userId int64, tokenType int) bool {
 	token := info.Token{}
 	affected, err := db.Engine.Where("UserId=?", userId).And("Type=?", tokenType).Delete(&token)
 	return err == nil
@@ -54,7 +54,7 @@ func (this *TokenService) VerifyToken(token string, tokenType int) (ok bool, msg
 
 	//db.GetByQ(db.Tokens, bson.M{"Token": token}, &tokenInfo)
 
-	if tokenInfo.UserId == "" {
+	if tokenInfo.UserId == 0 {
 		msg = "不存在"
 		return
 	}

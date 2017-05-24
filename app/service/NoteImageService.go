@@ -9,7 +9,7 @@ type NoteImageService struct {
 }
 
 // 通过id, userId得到noteIds
-func (this *NoteImageService) GetNoteIds(imageId string) []int64 {
+func (this *NoteImageService) GetNoteIds(imageId int64) []int64 {
 	// noteImages := []info.NoteImage{}
 	// db.ListByQWithFields(db.NoteImages, bson.M{"ImageId": bson.ObjectIdHex(imageId)}, []string{"NoteId"}, &noteImages)
 
@@ -77,7 +77,7 @@ func (this *NoteImageService) CopyNoteImages(fromNoteId, fromUserId, newNoteId, 
 		return content;
 	}
 	for _, noteImage := range noteImages {
-		imageId := noteImage.ImageId 
+		imageId := noteImage.ImageId
 		ok, newImageId := fileService.CopyImage(fromUserId, imageId, toUserId)
 		if ok {
 			replaceMap[imageId] = newImageId
@@ -121,12 +121,12 @@ func (this *NoteImageService) CopyNoteImages(fromNoteId, fromUserId, newNoteId, 
 	// 	return each
 	// })
 
-	return nil
+	return "nil"
 }
 
 //
 func (this *NoteImageService) getImagesByNoteIds(noteIds []int64) map[string][]info.File {
-	noteNoteImages := []info.NoteImage{}
+	//noteNoteImages := []info.NoteImage{}
 	// db.ListByQ(db.NoteImages, bson.M{"NoteId": bson.M{"$in": noteIds}}, &noteNoteImages)
 
 	// // 得到imageId, 再去files表查所有的Files
@@ -138,8 +138,8 @@ func (this *NoteImageService) getImagesByNoteIds(noteIds []int64) map[string][]i
 	// 	imageId := noteImage.ImageId
 	// 	imageIds = append(imageIds, imageId)
 
-	// 	imageIdHex := imageId 
-	// 	noteId := noteImage.NoteId 
+	// 	imageIdHex := imageId
+	// 	noteId := noteImage.NoteId
 	// 	if notes, ok := imageIdNotes[imageIdHex]; ok {
 	// 		imageIdNotes[imageIdHex] = append(notes, noteId)
 	// 	} else {
@@ -166,5 +166,5 @@ func (this *NoteImageService) getImagesByNoteIds(noteIds []int64) map[string][]i
 	// 		}
 	// 	}
 	// }
-	return noteImages
+	return map[string][]info.File{}
 }

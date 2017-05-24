@@ -9,6 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/go-xorm/core"
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 )
 
@@ -177,10 +178,10 @@ func subIdHalf(id string) string {
 
 // types == note,notebook,single
 // id noteId, notebookId, singleId 当title没的时候才有用, 用它来替换
-func GetUrTitle(userId string, title string, types string, id string) string {
+func GetUrTitle(userId int64, title string, types string, id string) string {
 	urlTitle := strings.Trim(title, " ")
 	if urlTitle == "" {
-		if id == "" {
+		if id == 0 {
 			urlTitle = "Untitled-" + userId
 		} else {
 			urlTitle = subIdHalf(id)

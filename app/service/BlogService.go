@@ -743,7 +743,7 @@ func (this *BlogService) Comment(noteId, toCommentId, userId, content string) (b
 }
 
 // 发送email
-func (this *BlogService) sendEmail(note info.Note, comment info.BlogComment, userId, content string) {
+func (this *BlogService) sendEmail(note info.Note, comment info.BlogComment, userId int64, content string) {
 	emailService.SendCommentEmail(note, comment, userId, content)
 	/*
 		toUserId := note.UserId

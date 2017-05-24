@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	//	"time"
 )
@@ -56,7 +57,7 @@ func (this *NoteContentHistoryService) newHistory(noteId, userId string, eachHis
 }
 
 // 列表展示
-func (this *NoteContentHistoryService) ListHistories(noteId, userId string) []info.EachHistory {
+func (this *NoteContentHistoryService) ListHistories(noteId, userId int64) []info.EachHistory {
 	histories := info.NoteContentHistory{}
 	db.Engine.Where("NoteId=?", noteId).And("UserId=?", userId).Find(&histories)
 	return histories.Histories

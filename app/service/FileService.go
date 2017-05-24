@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 )
 
-const DEFAULT_ALBUM_ID = "12345654323456543"
+const DEFAULT_ALBUM_ID = 12345654323456543
 
 type FileService struct {
 }
 
 // add Image
-func (this *FileService) AddImage(image info.File, albumId, userId string, needCheckSize bool) (ok bool, msg string) {
+func (this *FileService) AddImage(image info.File, albumId, userId int64, needCheckSize bool) (ok bool, msg string) {
 	image.CreatedTime = time.Now()
-	if albumId != "" {
+	if albumId != 0 {
 		image.AlbumId = albumId
 	} else {
 		image.AlbumId = DEFAULT_ALBUM_ID
@@ -164,8 +165,8 @@ func (this *FileService) GetImageBase64(userId, fileId string) string {
 // 获取文件路径
 // 要判断是否具有权限
 // userId是否具有fileId的访问权限
-func (this *FileService) GetFile(userId, fileId string) string {
-	if fileId == "" {
+func (this *FileService) GetFile(userId, fileId int64) string {
+	if fileId == 0 {
 		return ""
 	}
 
@@ -179,7 +180,7 @@ func (this *FileService) GetFile(userId, fileId string) string {
 	// 1. 判断权限
 
 	// 是否是我的文件
-	if userId != "" && file.UserId == userId {
+	if userId != 0 && file.UserId == userId {
 		return path
 	}
 
@@ -197,9 +198,9 @@ func (this *FileService) GetFile(userId, fileId string) string {
 		// 2014/12/28 修复, 如果是分享给用户组, 那就不行, 这里可以实现
 		for _, noteId := range noteIds {
 			note := noteService.GetNoteById(noteId)
-			if shareService.HasReadPerm(note.UserId, userId, noteId) {
-				return path
-			}
+			// if shareService.HasReadPerm(note.UserId, userId, noteId) {
+			// 	return path
+			// }
 		}
 		/*
 			// 若有共享给我的笔记?
@@ -226,7 +227,7 @@ func (this *FileService) GetFile(userId, fileId string) string {
 	}
 
 	// 可能是刚复制到owner上, 但内容又没有保存, 所以没有note->imageId的映射, 此时看是否有fromFileId
-	if file.FromFileId != "" {
+	if file.FromFileId != 0 {
 		fromFile := info.File{}
 		db.Engine.Id(file.FromFileId).Get(&fromFile)
 		if fromFile.UserId == userId {
@@ -244,7 +245,7 @@ func (this *FileService) CopyImage(userId, fileId, toUserId string) (bool, strin
 	// file2 := info.File{}
 	// db.GetByQ(db.Files, bson.M{"UserId": bson.ObjectIdHex(toUserId), "FromFileId": bson.ObjectIdHex(fileId)}, &file2)
 	// if file2.FileId != "" {
-	// 	return true, file2.FileId 
+	// 	return true, file2.FileId
 	// }
 
 	// // 复制之
@@ -280,11 +281,11 @@ func (this *FileService) CopyImage(userId, fileId, toUserId string) (bool, strin
 	// 	FromFileId: file.FileId}
 	// id := bson.NewObjectId()
 	// fileInfo.FileId = id
-	// fileId = id 
+	// fileId = id
 	// Ok, _ := this.AddImage(fileInfo, "", toUserId, false)
 
 	// if Ok {
-	// 	return Ok, id 
+	// 	return Ok, id
 	// }
 	return false, ""
 }
