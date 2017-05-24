@@ -1,15 +1,14 @@
 package service
 
 import (
-	"gopkg.in/mgo.v2/bson"
+
 	//	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
+	"github.com/sddysz/leanote/app/lea"
 	//	"github.com/revel/revel"
 	"errors"
 	"fmt"
 	"strings"
-
-	. "github.com/sddysz/leanote/app/lea"
 )
 
 // 登录与权限 Login & Register
@@ -23,7 +22,7 @@ func (this *AuthService) Login(emailOrUsername, pwd string) (info.User, error) {
 	emailOrUsername = strings.Trim(emailOrUsername, " ")
 	//	pwd = strings.Trim(pwd, " ")
 	userInfo := userService.GetUserInfoByName(emailOrUsername)
-	if userInfo.UserId == "" || !ComparePwd(pwd, userInfo.Pwd) {
+	if userInfo.UserId == 0 || !lea.ComparePwd(pwd, userInfo.Pwd) {
 		return userInfo, errors.New("wrong username or password")
 	}
 	return userInfo, nil
@@ -40,17 +39,17 @@ func (this *AuthService) Login(emailOrUsername, pwd string) (info.User, error) {
 // 1. 添加用户
 // 2. 将leanote共享给我
 // [ok]
-func (this *AuthService) Register(email, pwd, fromUserId string) (bool, string) {
+func (this *AuthService) Register(email, pwd string, fromUserId int64) (bool, string) {
 	// 用户是否已存在
 	if userService.IsExistsUser(email) {
 		return false, "userHasBeenRegistered-" + email
 	}
-	passwd := GenPwd(pwd)
+	passwd := lea.GenPwd(pwd)
 	if passwd == "" {
 		return false, "GenerateHash error"
 	}
 	user := info.User{Email: email, Username: email, Pwd: passwd}
-	if fromUserId != "" {
+	if fromUserId != 0 {
 		user.FromUserId = fromUserId
 	}
 	return this.register(user)
@@ -59,12 +58,12 @@ func (this *AuthService) Register(email, pwd, fromUserId string) (bool, string) 
 func (this *AuthService) register(user info.User) (bool, string) {
 	if userService.AddUser(user) {
 		// 添加笔记本, 生活, 学习, 工作
-		userId := user.UserId 
+		userId := user.UserId
 		notebook := info.Notebook{
 			Seq:    -1,
 			UserId: user.UserId}
 		title2Id := []string{"life", "study", "work"}
-		for title := range title2Id {
+		for _, title := range title2Id {
 			notebook.Title = title
 			notebook.UserId = user.UserId
 			notebookService.AddNotebook(notebook)
@@ -109,7 +108,7 @@ func (this *AuthService) register(user info.User) (bool, string) {
 			CanComment: true,
 		})
 		// 添加一个单页面
-		blogService.AddOrUpdateSingle(user.UserId , "", "About Me", "Hello, I am (^_^)")
+		blogService.AddOrUpdateSingle(user.UserId, 0, "About Me", "Hello, I am (^_^)")
 	}
 
 	return true, ""
@@ -132,13 +131,13 @@ func (this *AuthService) getUsername(thirdType, thirdUsername string) (username 
 
 func (this *AuthService) ThirdRegister(thirdType, thirdUserId, thirdUsername string) (exists bool, userInfo info.User) {
 	userInfo = userService.GetUserInfoByThirdUserId(thirdUserId)
-	if userInfo.UserId != "" {
+	if userInfo.UserId != 0 {
 		exists = true
 		return
 	}
 
 	username := this.getUsername(thirdType, thirdUsername)
-	userInfo = info.User{UserId: bson.NewObjectId(),
+	userInfo = info.User{
 		Username:      username,
 		ThirdUserId:   thirdUserId,
 		ThirdUsername: thirdUsername,

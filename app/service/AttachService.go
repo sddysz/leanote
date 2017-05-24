@@ -2,6 +2,7 @@ package service
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/revel/revel"
@@ -72,6 +73,9 @@ func (this *AttachService) ListAttachs(noteId, userId int64) []info.Attach {
 
 	// 笔记是否是自己的
 	note := noteService.GetNoteById(noteId)
+	if note.NoteId == 0 {
+		return attachs
+	}
 
 	// TODO 这里, 优化权限控制
 
@@ -125,22 +129,24 @@ func (this *AttachService) DeleteAttach(attachId, userId int64) (bool, string) {
 
 	db.Engine.Id(attachId).Get(&attach)
 
-	// if attach.AttachId != "" {
-	// 	// 判断是否有权限为笔记添加附件
-	// 	if !shareService.HasUpdateNotePerm(attach.NoteId, userId) {
-	// 		return false, "No Perm"
-	// 	}
+	if attach.AttachId != 0 {
+		// 判断是否有权限为笔记添加附件
+		// if !shareService.HasUpdateNotePerm(attach.NoteId, userId) {
+		// 	return false, "No Perm"
+		// }
 
-	if affected, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
-		this.updateNoteAttachNum(attach.NoteId, -1)
-		attach.Path = strings.TrimLeft(attach.Path, "/")
-		err := os.Remove(revel.BasePath + "/" + attach.Path)
-		if err == nil {
-			// userService.UpdateAttachSize(note.UserId , -attach.Size)
-			// 修改note Usn
-			noteService.IncrNoteUsn(attach.NoteId, userId)
+		if affected, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
+			this.updateNoteAttachNum(attach.NoteId, -1)
+			attach.Path = strings.TrimLeft(attach.Path, "/")
+			err := os.Remove(revel.BasePath + "/" + attach.Path)
+			if err == nil {
+				// userService.UpdateAttachSize(note.UserId , -attach.Size)
+				// 修改note Usn
+				noteService.IncrNoteUsn(attach.NoteId, userId)
 
-			return true, "delete file success"
+				return true, "delete file success"
+			}
+			return false, "delete file error"
 		}
 		return false, "delete file error"
 	}
@@ -153,6 +159,10 @@ func (this *AttachService) DeleteAttach(attachId, userId int64) (bool, string) {
 // 要判断是否具有权限
 // userId是否具有attach的访问权限
 func (this *AttachService) GetAttach(attachId, userId int64) (attach info.Attach) {
+
+	if attachId == 0 {
+		return
+	}
 
 	attach = info.Attach{}
 	db.Engine.Id(attachId).Get(&attach)
@@ -191,13 +201,14 @@ func (this *AttachService) CopyAttachs(noteId, toNoteId, toUserId int64) bool {
 	db.Engine.Where("NoteId=?", noteId).Find(&attachs)
 	// 复制之
 	for _, attach := range attachs {
-		attach.AttachId = nil
+
+		attach.AttachId = 0
 		attach.NoteId = toNoteId
 
 		// 文件复制一份
 		_, ext := SplitFilename(attach.Name)
 		newFilename := NewGuid() + ext
-		dir := "files/" + toUserId + "/attachs"
+		dir := "files/" + strconv.FormatInt(toUserId, 10) + "/attachs"
 		filePath := dir + "/" + newFilename
 		err := os.MkdirAll(revel.BasePath+"/"+dir, 0755)
 		if err != nil {
@@ -217,14 +228,14 @@ func (this *AttachService) CopyAttachs(noteId, toNoteId, toUserId int64) bool {
 }
 
 // 只留下files的数据, 其它的都删除
-func (this *AttachService) UpdateOrDeleteAttachApi(noteId, userId string, files []info.NoteFile) bool {
+func (this *AttachService) UpdateOrDeleteAttachApi(noteId, userId int64, files []info.NoteFile) bool {
 	// 现在数据库内的
 	attachs := this.ListAttachs(noteId, userId)
 
-	nowAttachs := map[string]bool{}
+	nowAttachs := map[int64]bool{}
 	if files != nil {
 		for _, file := range files {
-			if file.IsAttach && file.FileId != "" {
+			if file.IsAttach && file.FileId != 0 {
 				nowAttachs[file.FileId] = true
 			}
 		}

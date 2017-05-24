@@ -36,11 +36,11 @@ type User struct {
 
 	// 用户的帐户类型
 
-	ImageNum   int // 图片数量
-	ImageSize  int // 图片大小
-	AttachNum  int // 附件数量
-	AttachSize int // 附件大小
-	FromUserId int // 邀请的用户
+	ImageNum   int   // 图片数量
+	ImageSize  int   // 图片大小
+	AttachNum  int   // 附件数量
+	AttachSize int   // 附件大小
+	FromUserId int64 // 邀请的用户
 
 	AccountType      string    // normal(为空), premium
 	AccountStartTime time.Time // 开始日期

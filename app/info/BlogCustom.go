@@ -21,7 +21,7 @@ type BlogInfoCustom struct {
 }
 
 type Post struct {
-	NoteId      string
+	NoteId      int64
 	Title       string
 	UrlTitle    string
 	ImgSrc      string
@@ -32,9 +32,9 @@ type Post struct {
 	Abstract    string
 	Content     string
 	Tags        []string
-	CommentNum  int
-	ReadNum     int
-	LikeNum     int
+	CommentNum  int64
+	ReadNum     int64
+	LikeNum     int64
 	IsMarkdown  bool
 }
 

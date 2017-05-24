@@ -8,8 +8,8 @@ import (
 // 数据结构
 //---------
 type NoteFile struct {
-	FileId      string // 服务器端Id
-	LocalFileId string // 客户端Id
+	FileId      int64  // 服务器端Id
+	LocalFileId int64  // 客户端Id
 	Type        string // images/png, doc, xls, 根据fileName确定
 	Title       string
 	HasBody     bool // 传过来的值是否要更新内容

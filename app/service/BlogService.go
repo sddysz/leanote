@@ -1,8 +1,10 @@
 package service
 
 import (
+	"strconv"
+
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
 
 	//	"time"
 	//	"sort"
@@ -31,17 +33,17 @@ type BlogService struct {
 
 // 得到博客统计信息
 // ReadNum, LikeNum, CommentNum
-func (this *BlogService) GetBlogStat(noteId string) (stat info.BlogStat) {
+func (this *BlogService) GetBlogStat(noteId int64) (stat info.BlogStat) {
 	note := noteService.GetBlogNote(noteId)
 	stat = info.BlogStat{note.NoteId, note.ReadNum, note.LikeNum, note.CommentNum}
 	return
 }
 
 // 通过id或urlTitle得到博客
-func (this *BlogService) GetBlogByIdAndUrlTitle(userId string, noteIdOrUrlTitle string) (blog info.BlogItem) {
-	if IsObjectId(noteIdOrUrlTitle) {
-		return this.GetBlog(noteIdOrUrlTitle)
-	}
+func (this *BlogService) GetBlogByIdAndUrlTitle(userId int64, noteIdOrUrlTitle string) (blog info.BlogItem) {
+	// if IsObjectId(noteIdOrUrlTitle) {
+	// 	return this.GetBlog(noteIdOrUrlTitle)
+	// }
 	note := info.Note{}
 
 	db.Engine.Where("UserId=? and UrlTitle=? and IsBlog=? and IsTrash=? and IsDeleted=?", userId, noteIdOrUrlTitle, true, false, false).Get(&note)
@@ -49,17 +51,17 @@ func (this *BlogService) GetBlogByIdAndUrlTitle(userId string, noteIdOrUrlTitle 
 }
 
 // 得到某博客具体信息
-func (this *BlogService) GetBlog(noteId string) (blog info.BlogItem) {
+func (this *BlogService) GetBlog(noteId int64) (blog info.BlogItem) {
 	note := noteService.GetBlogNote(noteId)
 	return this.GetBlogItem(note)
 }
 func (this *BlogService) GetBlogItem(note info.Note) (blog info.BlogItem) {
-	if note.NoteId == "" || !note.IsBlog {
+	if note.NoteId == 0 || !note.IsBlog {
 		return info.BlogItem{}
 	}
 
 	// 内容
-	noteContent := noteService.GetNoteContent(note.NoteId , note.UserId )
+	noteContent := noteService.GetNoteContent(note.NoteId, note.UserId)
 
 	// 组装成blogItem
 	blog = info.BlogItem{note, noteContent.Abstract, noteContent.Content, false, info.User{}}
@@ -69,16 +71,16 @@ func (this *BlogService) GetBlogItem(note info.Note) (blog info.BlogItem) {
 
 // 得到用户共享的notebooks
 // 3/19 博客不是deleted
-func (this *BlogService) ListBlogNotebooks(userId string) []info.Notebook {
+func (this *BlogService) ListBlogNotebooks(userId int64) []info.Notebook {
 	notebooks := []info.Notebook{}
-	db.Engine.Where("IsDeleted = false or IsDeleted is null").And("UserId=?", userId).And("IsBlog=?", ture).Find(&notebooks)
+	db.Engine.Where("IsDeleted = false or IsDeleted is null").And("UserId=?", userId).And("IsBlog=?", true).Find(&notebooks)
 
 	return notebooks
 }
 
 // 博客列表
 // userId 表示谁的blog
-func (this *BlogService) ListBlogs(userId, notebookId string, page, pageSize int, sortField string, isAsc bool) (info.Page, []info.BlogItem) {
+func (this *BlogService) ListBlogs(userId, notebookId int64, page, pageSize int, sortField string, isAsc bool) (info.Page, []info.BlogItem) {
 	count, notes := noteService.ListNotes(userId, notebookId, false, page, pageSize, sortField, isAsc, true)
 
 	if notes == nil || len(notes) == 0 {
@@ -129,21 +131,21 @@ func (this *BlogService) GetBlogTags(userId string) []info.TagCount {
 	tagCounts := []info.TagCount{}
 	// tag不能为空
 
-	db.Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("Tag is not null").Sort("-Count").Find(&tagCounts)
+	db.Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("Tag is not null").Asc("Count").Find(&tagCounts)
 
 	return tagCounts
 }
 
 // 重新计算博客的标签
 // 在设置设置/取消为博客时调用
-func (this *BlogService) ReCountBlogTags(userId string) bool {
+func (this *BlogService) ReCountBlogTags(userId int64) bool {
 	// 得到所有博客
 	notes := []info.Note{}
 	userIdO := userId
 
 	db.Engine.Where("UserId=?", userId).And("IsBlog=?", true).And("IsDeleted=?", false).And("IsTrash=?", false).Cols("Tags").Find(&notes)
 
-	db.Engine.Where("UserId=?", userIdO).And("IsBlog", true).Delete()
+	db.Engine.Where("UserId=?", userIdO).And("IsBlog", true).Delete(&notes)
 
 	if notes == nil || len(notes) == 0 {
 		return true
@@ -181,11 +183,11 @@ Year: 2014
 Posts: []
 }
 */
-func (this *BlogService) ListBlogsArchive(userId, notebookId string, year, month int, sortField string, isAsc bool) []info.Archive {
+func (this *BlogService) ListBlogsArchive(userId, notebookId int64, year, month int, sortField string, isAsc bool) []info.Archive {
 	//	_, notes := noteService.ListNotes(userId, notebookId, false, 1, 99999, sortField, isAsc, true);
 	s := db.Engine.NewSession()
-	s = s.Where("UserId=?", userId).And("IsBlog", true).And("IsTrash", false).And("IsDeleted".false)
-	if notebookId != "" {
+	s = s.Where("UserId=?", userId).And("IsBlog", true).And("IsTrash", false).And("IsDeleted", false)
+	if notebookId != 0 {
 		s = s.And("NotebookId=?", notebookId)
 	}
 
@@ -298,7 +300,7 @@ func (this *BlogService) SearchBlogByTags(tags []string, userId string, pageNumb
 	} else {
 		db.Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Desc(sortField).Limit(skipNum, pageSize).Find(&notes)
 	}
-	note := inf.Note{}
+	note := info.Note{}
 	count, _ := db.Engine.Where("UserId=? and IsTrash= ? and IsDeleted= ? and IsBlog = ?", userId, false, false, true).In("Tags", tags).Count(&note)
 
 	// 总记录数
@@ -307,7 +309,7 @@ func (this *BlogService) SearchBlogByTags(tags []string, userId string, pageNumb
 	}
 
 	blogs = this.notes2BlogItems(notes)
-	pageInfo = info.NewPage(pageNumber, pageSize, count, nil)
+	pageInfo = info.NewPage(pageNumber, pageSize, int(count), nil)
 
 	return
 }
@@ -416,8 +418,8 @@ func (this *BlogService) PreNextBlog(userId string, sorterField string, isAsc bo
 	// q = db.Notes.Find(query)
 	// q.Sort(sortFieldR2).Limit(1).One(&note2)
 
-	//return this.FixNote(note), this.FixNote(note2)
-	return nil
+	// return this.FixNote(note), this.FixNote(note2)
+	return info.Post{}, info.Post{}
 }
 
 //-------
@@ -505,7 +507,7 @@ func (this *BlogService) ListAllBlogs(userId, tag string, keywords string, isRec
 	pageInfo = info.NewPage(page, pageSize, count, nil)
 
 	return pageInfo, blogs*/
-	return nil
+	return info.Page{}, []info.BlogItem{}
 }
 
 //------------------------
@@ -577,14 +579,14 @@ func (this *BlogService) GetUserBlogBySubDomain(subDomain string) info.UserBlog 
 	// db.GetByQ(db.UserBlogs, bson.M{"SubDomain": subDomain}, &blogUser)
 	// this.fixUserBlog(&blogUser)
 	// return blogUser
-	return nil
+	return info.UserBlog{}
 }
 func (this *BlogService) GetUserBlogByDomain(domain string) info.UserBlog {
 	// blogUser := info.UserBlog{}
 	// db.GetByQ(db.UserBlogs, bson.M{"Domain": domain}, &blogUser)
 	// this.fixUserBlog(&blogUser)
 	// return blogUser
-	return nil
+	return info.UserBlog{}
 }
 
 //---------------------
@@ -597,7 +599,7 @@ func (this *BlogService) SetRecommend(noteId string, isRecommend bool) bool {
 	// 	data["RecommendTime"] = time.Now()
 	// }
 	// return db.UpdateByQMap(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId), "IsBlog": true}, data)
-	return nil
+	return true
 }
 
 //----------------------
@@ -737,19 +739,19 @@ func (this *BlogService) Comment(noteId, toCommentId, userId, content string) (b
 	// }
 
 	// return ok, comment
-	return true, nil
+	return true, info.BlogComment{}
 }
 
 // 发送email
 func (this *BlogService) sendEmail(note info.Note, comment info.BlogComment, userId, content string) {
 	emailService.SendCommentEmail(note, comment, userId, content)
 	/*
-		toUserId := note.UserId 
+		toUserId := note.UserId
 		// title := "评论提醒"
 
 		// 表示回复回复的内容, 那么发送给之前回复的
 		if comment.CommentId != "" {
-			toUserId = comment.UserId 
+			toUserId = comment.UserId
 		}
 		toUserInfo := userService.GetUserInfo(toUserId)
 		sendUserInfo := userService.GetUserInfo(userId)
@@ -764,7 +766,7 @@ func (this *BlogService) sendEmail(note info.Note, comment info.BlogComment, use
 		}
 
 		body := "{header}<b>评论内容</b>: <br /><blockquote>" + content + "</blockquote>";
-		href := "http://"+ configService.GetBlogDomain() + "/view/" + note.NoteId 
+		href := "http://"+ configService.GetBlogDomain() + "/view/" + note.NoteId
 		body += "<br /><b>博客链接</b>: <a href='" + href + "'>" + href + "</a>{footer}";
 
 		emailService.SendEmail(toUserInfo.Email, subject, body)
@@ -836,7 +838,7 @@ func (this *BlogService) LikeComment(commentId, userId string) (ok bool, isILike
 // 评论列表
 // userId主要是显示userId是否点过某评论的赞
 // 还要获取用户信息
-func (this *BlogService) ListComments(userId, noteId string, page, pageSize int) (info.Page, []info.BlogCommentPublic, map[string]info.UserAndBlog) {
+func (this *BlogService) ListComments(userId, noteId string, page, pageSize int) (info.Page, []info.BlogCommentPublic, map[int64]info.UserAndBlog) {
 	pageInfo := info.Page{CurPage: page}
 
 	comments2 := []info.BlogComment{}
@@ -886,7 +888,7 @@ func (this *BlogService) ListComments(userId, noteId string, page, pageSize int)
 
 	//return pageInfo, comments, userMap
 
-	return pageInfo, comments2, nil
+	return pageInfo, []info.BlogCommentPublic{}, map[int64]info.UserAndBlog{}
 }
 
 // 举报
@@ -980,7 +982,7 @@ func (this *BlogService) GetSingle(singleId string) info.BlogSingle {
 	// page := info.BlogSingle{}
 	// db.Get(db.BlogSingles, singleId, &page)
 	// return page
-	return nil
+	return info.BlogSingle{}
 }
 func (this *BlogService) GetSingleByUserIdAndUrlTitle(userId, singleIdOrUrlTitle string) info.BlogSingle {
 	page := info.BlogSingle{}
@@ -1066,7 +1068,7 @@ func (this *BlogService) UpdateSingleUrlTitle(userId, singleId, urlTitle string)
 }
 
 // 更新或添加
-func (this *BlogService) AddOrUpdateSingle(userId, singleId, title, content string) (ok bool) {
+func (this *BlogService) AddOrUpdateSingle(userId, singleId int64, title, content string) (ok bool) {
 	ok = false
 	// if singleId != "" {
 	// 	ok = db.UpdateByIdAndUserIdMap(db.BlogSingles, singleId, userId, bson.M{
@@ -1133,7 +1135,7 @@ func (this *BlogService) GetUserBlogUrl(userBlog *info.UserBlog, username string
 				return configService.GetUserSubUrl(userBlog.SubDomain)
 			}
 			if username == "" {
-				username = userBlog.UserId 
+				username = userBlog.UserId
 			}
 		}
 	*/
@@ -1174,7 +1176,7 @@ func (this *BlogService) GetBlogUrls(userBlog *info.UserBlog, userInfo *info.Use
 	// } else if userInfo.Email != "" {
 	// 	userIdOrEmail = userInfo.Email
 	// } else {
-	// 	userIdOrEmail = userInfo.UserId 
+	// 	userIdOrEmail = userInfo.UserId
 	// }
 	// indexUrl = blogUrl + "/" + userIdOrEmail
 	// cateUrl = blogUrl + "/cate/" + userIdOrEmail        // /username/notebookId
@@ -1196,7 +1198,7 @@ func (this *BlogService) GetBlogUrls(userBlog *info.UserBlog, userInfo *info.Use
 	// 	TagsUrl:     tagsUrl,
 	// 	TagPostsUrl: tagPostsUrl,
 	// }
-	return nil
+	return info.BlogUrls{}
 }
 
 // 转成post
@@ -1210,7 +1212,7 @@ func (this *BlogService) FixBlogs(blogs []info.BlogItem) []info.Post {
 func (this *BlogService) FixBlog(blog info.BlogItem) info.Post {
 	urlTitle := blog.UrlTitle
 	if urlTitle == "" {
-		urlTitle = blog.NoteId
+		urlTitle = strconv.FormatInt(blog.NoteId, 10)
 	}
 	blog2 := info.Post{
 		NoteId:      blog.NoteId,
@@ -1237,12 +1239,12 @@ func (this *BlogService) FixBlog(blog info.BlogItem) info.Post {
 }
 
 func (this *BlogService) FixNote(note info.Note) info.Post {
-	if note.NoteId == "" {
+	if note.NoteId == 0 {
 		return info.Post{}
 	}
 	urlTitle := note.UrlTitle
 	if urlTitle == "" {
-		urlTitle = note.NoteId
+		urlTitle = strconv.FormatInt(note.NoteId, 10)
 	}
 	return info.Post{
 		NoteId:      note.NoteId,
