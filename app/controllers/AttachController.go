@@ -22,11 +22,11 @@ type Attach struct {
 }
 
 // 上传附件
-func (c Attach) UploadAttach(noteId string) revel.Result {
+func (c Attach) UploadAttach(noteId int64) revel.Result {
 	re := c.uploadAttach(noteId)
 	return c.RenderJSON(re)
 }
-func (c Attach) uploadAttach(noteId string) (re info.Re) {
+func (c Attach) uploadAttach(noteId int64) (re info.Re) {
 	var fileId = ""
 	var resultMsg = "error" // 错误信息
 	var Ok = false
@@ -42,9 +42,9 @@ func (c Attach) uploadAttach(noteId string) (re info.Re) {
 	}()
 
 	// 判断是否有权限为笔记添加附件
-	if !shareService.HasUpdateNotePerm(noteId, c.GetUserId()) {
-		return re
-	}
+	// if !shareService.HasUpdateNotePerm(noteId, c.GetUserId()) {
+	// 	return re
+	// }
 
 	file, handel, err := c.Request.FormFile("file")
 	if err != nil {
@@ -112,14 +112,14 @@ func (c Attach) uploadAttach(noteId string) (re info.Re) {
 }
 
 // 删除附件
-func (c Attach) DeleteAttach(attachId string) revel.Result {
+func (c Attach) DeleteAttach(attachId int64) revel.Result {
 	re := info.NewRe()
 	re.Ok, re.Msg = attachService.DeleteAttach(attachId, c.GetUserId())
 	return c.RenderJSON(re)
 }
 
 // get all attachs by noteId
-func (c Attach) GetAttachs(noteId string) revel.Result {
+func (c Attach) GetAttachs(noteId int64) revel.Result {
 	re := info.NewRe()
 	re.Ok = true
 	re.List = attachService.ListAttachs(noteId, c.GetUserId())
@@ -128,7 +128,7 @@ func (c Attach) GetAttachs(noteId string) revel.Result {
 
 // 下载附件
 // 权限判断
-func (c Attach) Download(attachId string) revel.Result {
+func (c Attach) Download(attachId int64) revel.Result {
 	attach := attachService.GetAttach(attachId, c.GetUserId()) // 得到路径
 	path := attach.Path
 	if path == "" {
@@ -140,9 +140,9 @@ func (c Attach) Download(attachId string) revel.Result {
 	// return c.RenderFile(file, revel.Attachment) // revel.Attachment
 }
 
-func (c Attach) DownloadAll(noteId string) revel.Result {
+func (c Attach) DownloadAll(noteId int64) revel.Result {
 	note := noteService.GetNoteById(noteId)
-	if note.NoteId == "" {
+	if note.NoteId == 0 {
 		return c.RenderText("")
 	}
 	// 得到文件列表

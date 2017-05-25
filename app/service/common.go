@@ -27,6 +27,6 @@ func parsePage(pageNumber, pageSize int) (skipNum int) {
 
 // IsObjectId 判断id是否是数字
 func IsObjectId(id string) bool {
-	b, error := strconv.Atoi(id)
+	_, error := strconv.Atoi(id)
 	return error == nil
 }

@@ -8,8 +8,6 @@ import (
 
 	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
-	. "github.com/sddysz/leanote/app/lea"
-	"gopkg.in/mgo.v2/bson"
 	//	"html"
 )
 
@@ -63,7 +61,7 @@ func ParseAndSortNotebooks(userNotebooks []info.Notebook, noParentDelete, needSo
 	needDeleteNotebookId := map[int64]bool{}
 	for id, each := range userNotebooksMap {
 		// 如果有父, 那么追加到父下, 并剪掉当前, 那么最后就只有根的元素
-		if each.ParentNotebookId  != "" {
+		if each.ParentNotebookId != 0 {
 			if userNotebooksMap[each.ParentNotebookId] != nil {
 				userNotebooksMap[each.ParentNotebookId].Subs = append(userNotebooksMap[each.ParentNotebookId].Subs, each) // Subs是存地址
 				// 并剪掉
@@ -96,24 +94,24 @@ func ParseAndSortNotebooks(userNotebooks []info.Notebook, noParentDelete, needSo
 }
 
 // 得到某notebook
-func (this *NotebookService) GetNotebook(notebookId, userId string) info.Notebook {
+func (this *NotebookService) GetNotebook(notebookId, userId int64) info.Notebook {
 	notebook := info.Notebook{}
 	db.Engine.Where("NotebookId=？", notebookId).And("UserId=?", userId).Get(&notebook)
 	return notebook
 }
-func (this *NotebookService) GetNotebookById(notebookId string) info.Notebook {
+func (this *NotebookService) GetNotebookById(notebookId int64) info.Notebook {
 	notebook := info.Notebook{}
 	db.Engine.Id(notebookId).Get(&notebook)
 	return notebook
 }
-func (this *NotebookService) GetNotebookByUserIdAndUrlTitle(userId, notebookIdOrUrlTitle string) info.Notebook {
+func (this *NotebookService) GetNotebookByUserIdAndUrlTitle(userId int64, notebookIdOrUrlTitle string) info.Notebook {
 	notebook := info.Notebook{}
 	db.Engine.Where("NotebookId=?", notebookIdOrUrlTitle).Or("UrlTitle=?", notebookIdOrUrlTitle).And("UserId=?", userId).Get(&notebook)
 	return notebook
 }
 
 // 同步的方法
-func (this *NotebookService) GeSyncNotebooks(userId string, afterUsn, maxEntry int) []info.Notebook {
+func (this *NotebookService) GeSyncNotebooks(userId int64, afterUsn, maxEntry int) []info.Notebook {
 	notebooks := []info.Notebook{}
 
 	db.Engine.Where("UserId=?", userId).And("Usn>=?", afterUsn).Asc("Usn").Limit(0, maxEntry).Find(&notebooks)
@@ -123,7 +121,7 @@ func (this *NotebookService) GeSyncNotebooks(userId string, afterUsn, maxEntry i
 // 得到用户下所有的notebook
 // 排序好之后返回
 // [ok]
-func (this *NotebookService) GetNotebooks(userId string) info.SubNotebooks {
+func (this *NotebookService) GetNotebooks(userId int64) info.SubNotebooks {
 	userNotebooks := []info.Notebook{}
 
 	db.Engine.Where("UserId=?", userId).And("IsDeleted <>?", true).Find(&userNotebooks)
@@ -155,7 +153,7 @@ func (this *NotebookService) AddNotebook(notebook info.Notebook) (bool, info.Not
 	now := time.Now()
 	notebook.CreatedTime = now
 	notebook.UpdatedTime = now
-	affected, err := db.Engine.Insert(&notebook)
+	_, err := db.Engine.Insert(&notebook)
 	if err != nil {
 		return false, notebook
 	}
@@ -163,15 +161,15 @@ func (this *NotebookService) AddNotebook(notebook info.Notebook) (bool, info.Not
 }
 
 // 更新笔记, api
-func (this *NotebookService) UpdateNotebookApi(userId, notebookId, title, parentNotebookId string, seq, usn int) (bool, string, info.Notebook) {
-	if notebookId == "" {
+func (this *NotebookService) UpdateNotebookApi(userId, notebookId int64, title, parentNotebookId string, seq int, usn int64) (bool, string, info.Notebook) {
+	if notebookId == 0 {
 		return false, "notebookIdNotExists", info.Notebook{}
 	}
 
 	// 先判断usn是否和数据库的一样, 如果不一样, 则冲突, 不保存
 	notebook := this.GetNotebookById(notebookId)
 	// 不存在
-	if notebook.NotebookId == "" {
+	if notebook.NotebookId == 0 {
 		return false, "notExists", notebook
 	} else if notebook.Usn != usn {
 		return false, "conflict", notebook
@@ -193,14 +191,14 @@ func (this *NotebookService) UpdateNotebookApi(userId, notebookId, title, parent
 }
 
 // 判断是否是blog
-func (this *NotebookService) IsBlog(notebookId string) bool {
+func (this *NotebookService) IsBlog(notebookId int64) bool {
 	notebook := info.Notebook{}
 	db.Engine.Id(notebookId).Get(&notebook)
 	return notebook.IsBlog
 }
 
 // 判断是否是我的notebook
-func (this *NotebookService) IsMyNotebook(notebookId, userId string) bool {
+func (this *NotebookService) IsMyNotebook(notebookId, userId int64) bool {
 	notebook := info.Notebook{}
 	db.Engine.Id(notebookId).Get(&notebook)
 	return notebook.UserId == userId
@@ -216,12 +214,12 @@ func (this *NotebookService) UpdateNotebook(notebook info.Notebook) bool {
 
 // 更新笔记本标题
 // [ok]
-func (this *NotebookService) UpdateNotebookTitle(notebookId, userId, title string) bool {
+func (this *NotebookService) UpdateNotebookTitle(notebookId, userId int64, title string) bool {
 	usn := userService.IncrUsn(userId)
 	notebook := info.Notebook{}
 	notebook.Usn = usn
 	notebook.Title = title
-	affected, err := db.Engine.Id(notebookId).Cols("Title", "Usn").Update(&notebook)
+	_, err := db.Engine.Id(notebookId).Cols("Title", "Usn").Update(&notebook)
 	return err == nil
 }
 
@@ -236,7 +234,7 @@ func (this *NotebookService) UpdateNotebookTitle(notebookId, userId, title strin
 // }
 
 // ToBlog or Not
-func (this *NotebookService) ToBlog(userId, notebookId string, isBlog bool) bool {
+func (this *NotebookService) ToBlog(userId, notebookId int64, isBlog bool) bool {
 	// updates := bson.M{"IsBlog": isBlog, "Usn": userService.IncrUsn(userId)}
 	// // 笔记本
 	// db.UpdateByIdAndUserIdMap(db.Notebooks, notebookId, userId, updates)
@@ -276,7 +274,7 @@ func (this *NotebookService) ToBlog(userId, notebookId string, isBlog bool) bool
 
 // 查看是否有子notebook
 // 先查看该notebookId下是否有notes, 没有则删除
-func (this *NotebookService) DeleteNotebook(userId, notebookId string) (bool, string) {
+func (this *NotebookService) DeleteNotebook(userId, notebookId int64) (bool, string) {
 	// if db.Count(db.Notebooks, bson.M{
 	// 	"ParentNotebookId": bson.ObjectIdHex(notebookId),
 	// 	"UserId":           bson.ObjectIdHex(userId),
@@ -299,23 +297,23 @@ func (this *NotebookService) DeleteNotebook(userId, notebookId string) (bool, st
 }
 
 // API调用, 删除笔记本, 不作笔记控制
-func (this *NotebookService) DeleteNotebookForce(userId, notebookId string, usn int) (bool, string) {
+func (this *NotebookService) DeleteNotebookForce(userId, notebookId int64, usn int64) (bool, string) {
 	notebook := this.GetNotebookById(notebookId)
 	// 不存在
-	if notebook.NotebookId == "" {
+	if notebook.NotebookId == 0 {
 		return false, "notExists"
 	} else if notebook.Usn != usn {
 		return false, "conflict"
 	}
-	affected, err := db.Engine.Id(notebookId).Delete(&notebook)
-	return false, err == nil
+	_, err := db.Engine.Id(notebookId).Delete(&notebook)
+	return err == nil, ""
 }
 
 // 排序
 // 传入 notebookId => Seq
 // 为什么要传入userId, 防止修改其它用户的信息 (恶意)
 // [ok]
-func (this *NotebookService) SortNotebooks(userId string, notebookId2Seqs map[string]int) bool {
+func (this *NotebookService) SortNotebooks(userId int64, notebookId2Seqs map[string]int) bool {
 	if len(notebookId2Seqs) == 0 {
 		return false
 	}
@@ -325,7 +323,7 @@ func (this *NotebookService) SortNotebooks(userId string, notebookId2Seqs map[st
 		notebook.Seq = seq
 		notebook.Usn = userService.IncrUsn(userId)
 
-		affected, err := db.Engine.Id(notebookId).Update(&notebook)
+		_, err := db.Engine.Id(notebookId).Update(&notebook)
 		if err != nil {
 			return false
 		}
@@ -335,7 +333,7 @@ func (this *NotebookService) SortNotebooks(userId string, notebookId2Seqs map[st
 }
 
 // 排序和设置父
-func (this *NotebookService) DragNotebooks(userId string, curNotebookId string, parentNotebookId string, siblings []string) bool {
+func (this *NotebookService) DragNotebooks(userId int64, curNotebookId int64, parentNotebookId int64, siblings []string) bool {
 	// ok := false
 	// // 如果没parentNotebookId, 则parentNotebookId设空
 	// if parentNotebookId == "" {
@@ -361,13 +359,14 @@ func (this *NotebookService) DragNotebooks(userId string, curNotebookId string, 
 // 重新统计笔记本下的笔记数目
 // noteSevice: AddNote, CopyNote, CopySharedNote, MoveNote
 // trashService: DeleteNote (recove不用, 都统一在MoveNote里了)
-func (this *NotebookService) ReCountNotebookNumberNotes(notebookId string) bool {
-	notebookIdO := notebookId
-	notebook := info.Notebook{}
-	count, _ := db.Engine.Where("NotebookId=?", notebookId).And("IsTrash=?", false).And("IsDeleted=?", false).Count(&notebook)
-	Log(count)
-	Log(notebookId)
-	return db.UpdateByQField(db.Notebooks, bson.M{"_id": notebookIdO}, "NumberNotes", count)
+func (this *NotebookService) ReCountNotebookNumberNotes(notebookId int64) bool {
+	// notebookIdO := notebookId
+	// notebook := info.Notebook{}
+	// count, _ := db.Engine.Where("NotebookId=?", notebookId).And("IsTrash=?", false).And("IsDeleted=?", false).Count(&notebook)
+	// Log(count)
+	// Log(notebookId)
+	// return db.UpdateByQField(db.Notebooks, bson.M{"_id": notebookIdO}, "NumberNotes", count)
+	return true
 }
 
 func (this *NotebookService) ReCountAll() {

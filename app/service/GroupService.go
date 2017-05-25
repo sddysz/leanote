@@ -18,7 +18,7 @@ func (this *GroupService) AddGroup(userId int64, title string) (bool, info.Group
 		UserId: userId,
 		Title:  title,
 	}
-	affected, err := db.Engine.Insert(&group)
+	_, err := db.Engine.Insert(&group)
 	return err == nil, group
 }
 
@@ -40,7 +40,7 @@ func (this *GroupService) DeleteGroup(userId, groupId string) (ok bool, msg stri
 	// shareService.DeleteAllShareNoteGroup(groupId)
 
 	group := info.Group{}
-	affected, err := db.Engine.Id(groupId).Delete(group)
+	_, err := db.Engine.Id(groupId).Delete(group)
 	return err == nil, ""
 
 	// TODO 删除分组后, 在shareNote, shareNotebook中也要删除

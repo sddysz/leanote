@@ -58,7 +58,7 @@ func (this *AuthService) Register(email, pwd string, fromUserId int64) (bool, st
 func (this *AuthService) register(user info.User) (bool, string) {
 	if userService.AddUser(user) {
 		// 添加笔记本, 生活, 学习, 工作
-		userId := user.UserId
+		// userId := user.UserId
 		notebook := info.Notebook{
 			Seq:    -1,
 			UserId: user.UserId}

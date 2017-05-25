@@ -79,7 +79,7 @@ func (this *NoteService) GetNoteBySrc(src, userId string) (note info.Note) {
 }
 
 func (this *NoteService) GetNoteAndContentBySrc(src, userId string) (noteId string, noteAndContent info.NoteAndContentSep) {
-	note := this.GetNoteBySrc(src, userId)
+	// note := this.GetNoteBySrc(src, userId)
 	// if note.NoteId != "" {
 	// 	noteId = note.NoteId
 	// 	noteContent := this.GetNoteContent(note.NoteId , userId)
@@ -151,8 +151,8 @@ func (this *NoteService) ToApiNote(note *info.Note, files []info.NoteFile) info.
 // 查images表, attachs表
 // [待测]
 func (this *NoteService) getFiles(noteIds []int64) map[string][]info.NoteFile {
-	noteImages := noteImageService.getImagesByNoteIds(noteIds)
-	noteAttachs := attachService.getAttachsByNoteIds(noteIds)
+	// noteImages := noteImageService.getImagesByNoteIds(noteIds)
+	// noteAttachs := attachService.getAttachsByNoteIds(noteIds)
 
 	noteFilesMap := map[string][]info.NoteFile{}
 
@@ -192,7 +192,7 @@ func (this *NoteService) getFiles(noteIds []int64) map[string][]info.NoteFile {
 func (this *NoteService) ListNotes(userId, notebookId int64,
 	isTrash bool, pageNumber, pageSize int, sortField string, isAsc bool, isBlog bool) (count int, notes []info.Note) {
 	notes = []info.Note{}
-	skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
+	// skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
 
 	// 不是trash的
 	// query := bson.M{"UserId": bson.ObjectIdHex(userId), "IsTrash": isTrash, "IsDeleted": false}
@@ -219,7 +219,7 @@ func (this *NoteService) ListNotes(userId, notebookId int64,
 // 通过noteIds来查询
 // ShareService调用
 func (this *NoteService) ListNotesByNoteIdsWithPageSort(noteIds []int64, userId string, pageNumber, pageSize int, sortField string, isAsc bool, isBlog bool) (notes []info.Note) {
-	skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
+	// skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
 	notes = []info.Note{}
 
 	// 不是trash
@@ -304,10 +304,10 @@ func (this *NoteService) AddNote(note info.Note, fromApi bool) info.Note {
 // 添加共享d笔记
 func (this *NoteService) AddSharedNote(note info.Note, myUserId int64) info.Note {
 	// 判断我是否有权限添加
-	if shareService.HasUpdateNotebookPerm(note.UserId, myUserId, note.NotebookId) {
-		note.CreatedUserId = myUserId // 是我给共享我的人创建的
-		return this.AddNote(note, false)
-	}
+	// if shareService.HasUpdateNotebookPerm(note.UserId, myUserId, note.NotebookId) {
+	// 	note.CreatedUserId = myUserId // 是我给共享我的人创建的
+	// 	return this.AddNote(note, false)
+	// }
 	return info.Note{}
 }
 
@@ -372,14 +372,14 @@ func (this *NoteService) AddNoteAndContentApi(note info.Note, noteContent info.N
 
 // 添加笔记和内容
 // 这里使用 info.NoteAndContent 接收?
-func (this *NoteService) AddNoteAndContentForController(note info.Note, noteContent info.NoteContent, updatedUserId string) info.Note {
+func (this *NoteService) AddNoteAndContentForController(note info.Note, noteContent info.NoteContent, updatedUserId int64) info.Note {
 	if note.UserId != updatedUserId {
-		if !shareService.HasUpdateNotebookPerm(note.UserId, updatedUserId, note.NotebookId) {
-			Log("NO AUTH11")
-			return info.Note{}
-		} else {
-			Log("HAS AUTH -----------")
-		}
+		// if !shareService.HasUpdateNotebookPerm(note.UserId, updatedUserId, note.NotebookId) {
+		// 	Log("NO AUTH11")
+		// 	return info.Note{}
+		// } else {
+		// 	Log("HAS AUTH -----------")
+		// }
 	}
 	return this.AddNoteAndContent(note, noteContent, updatedUserId)
 }
@@ -556,36 +556,36 @@ func (this *NoteService) IncrNoteUsn(noteId, userId int64) int64 {
 func (this *NoteService) UpdateNoteTitle(userId, updatedUserId, noteId, title string) bool {
 	// updatedUserId 要修改userId的note, 此时需要判断是否有修改权限
 	if userId != updatedUserId {
-		if !shareService.HasUpdatePerm(userId, updatedUserId, noteId) {
-			println("NO AUTH")
-			return false
-		}
+		// if !shareService.HasUpdatePerm(userId, updatedUserId, noteId) {
+		// 	println("NO AUTH")
+		// 	return false
+		// }
 	}
 
 	// return db.UpdateByIdAndUserIdMap(db.Notes, noteId, userId,
 	// 	bson.M{"UpdatedUserId": bson.ObjectIdHex(updatedUserId), "Title": title, "UpdatedTime": time.Now(), "Usn": userService.IncrUsn(userId)})
-	return nil
+	return true
 }
 
 // 修改笔记本内容
 // [ok] TODO perm未测
 // hasBeforeUpdateNote 之前是否更新过note其它信息, 如果有更新, usn不用更新
 // TODO abstract这里生成
-func (this *NoteService) UpdateNoteContent(updatedUserId, noteId, content, abstract string,
+func (this *NoteService) UpdateNoteContent(updatedUserId, noteId int64, content, abstract string,
 	hasBeforeUpdateNote bool,
 	usn int, updatedTime time.Time) (bool, string, int) {
 	// 是否已自定义
 	note := this.GetNoteById(noteId)
-	if note.NoteId == "" {
+	if note.NoteId == 0 {
 		return false, "notExists", 0
 	}
 	userId := note.UserId
 	// updatedUserId 要修改userId的note, 此时需要判断是否有修改权限
 	if userId != updatedUserId {
-		if !shareService.HasUpdatePerm(userId, updatedUserId, noteId) {
-			Log("NO AUTH")
-			return false, "noAuth", 0
-		}
+		// if !shareService.HasUpdatePerm(userId, updatedUserId, noteId) {
+		// 	Log("NO AUTH")
+		// 	return false, "noAuth", 0
+		// }
 	}
 
 	updatedTime = FixUrlTime(updatedTime)
@@ -631,18 +631,18 @@ func (this *NoteService) UpdateNoteContent(updatedUserId, noteId, content, abstr
 // 这种方式太恶心, 改动很大
 // 通过content修改笔记的imageIds列表
 // src="http://localhost:9000/file/outputImage?fileId=541ae75499c37b6b79000005&noteId=541ae63c19807a4bb9000000"
-func (this *NoteService) updateNoteImages(noteId string, content string) bool {
+func (this *NoteService) updateNoteImages(noteId int64, content string) bool {
 	return true
 }
 
 // 更新tags
 // [ok] [del]
-func (this *NoteService) UpdateTags(noteId string, userId string, tags []string) bool {
+func (this *NoteService) UpdateTags(noteId int64, userId int64, tags []string) bool {
 	//return db.UpdateByIdAndUserIdMap(db.Notes, noteId, userId, bson.M{"Tags": tags, "Usn": userService.IncrUsn(userId)})
 	return true
 }
 
-func (this *NoteService) ToBlog(userId, noteId string, isBlog, isTop bool) bool {
+func (this *NoteService) ToBlog(userId, noteId int64, isBlog, isTop bool) bool {
 	// noteUpdate := bson.M{}
 	// if isTop {
 	// 	isBlog = true
@@ -673,7 +673,7 @@ func (this *NoteService) ToBlog(userId, noteId string, isBlog, isTop bool) bool 
 // trash, 正常的都可以用
 // 1. 要检查下notebookId是否是自己的
 // 2. 要判断之前是否是blog, 如果不是, 那么notebook是否是blog?
-func (this *NoteService) MoveNote(noteId, notebookId, userId string) info.Note {
+func (this *NoteService) MoveNote(noteId, notebookId, userId int64) info.Note {
 	// if notebookService.IsMyNotebook(notebookId, userId) {
 	// 	note := this.GetNote(noteId, userId)
 	// 	preNotebookId := note.NotebookId
@@ -705,7 +705,7 @@ func (this *NoteService) MoveNote(noteId, notebookId, userId string) info.Note {
 // 否则, 如果notebookId的blog是true, 则改为true之
 // 返回blog状态
 // move, copy时用
-func (this *NoteService) updateToNotebookBlog(noteId, notebookId, userId string) bool {
+func (this *NoteService) updateToNotebookBlog(noteId, notebookId, userId int64) bool {
 	// if this.IsBlog(noteId) {
 	// 	return true
 	// }
@@ -718,7 +718,7 @@ func (this *NoteService) updateToNotebookBlog(noteId, notebookId, userId string)
 }
 
 // 判断是否是blog
-func (this *NoteService) IsBlog(noteId string) bool {
+func (this *NoteService) IsBlog(noteId int64) bool {
 	note := info.Note{}
 	//db.GetByQWithFields(db.Notes, bson.M{"_id": bson.ObjectIdHex(noteId)}, []string{"IsBlog"}, &note)
 	return note.IsBlog
@@ -728,7 +728,7 @@ func (this *NoteService) IsBlog(noteId string) bool {
 // 正常的可以用
 // 先查, 再新建
 // 要检查下notebookId是否是自己的
-func (this *NoteService) CopyNote(noteId, notebookId, userId string) info.Note {
+func (this *NoteService) CopyNote(noteId, notebookId, userId int64) info.Note {
 	// if notebookService.IsMyNotebook(notebookId, userId) {
 	// 	note := this.GetNote(noteId, userId)
 	// 	noteContent := this.GetNoteContent(noteId, userId)
@@ -756,7 +756,7 @@ func (this *NoteService) CopyNote(noteId, notebookId, userId string) info.Note {
 
 // 复制别人的共享笔记给我
 // 将别人可用的图片转为我的图片, 复制图片
-func (this *NoteService) CopySharedNote(noteId, notebookId, fromUserId, myUserId string) info.Note {
+func (this *NoteService) CopySharedNote(noteId, notebookId, fromUserId, myUserId int64) info.Note {
 	// 判断是否共享了给我
 	// Log(notebookService.IsMyNotebook(notebookId, myUserId))
 	// if notebookService.IsMyNotebook(notebookId, myUserId) && shareService.HasReadPerm(fromUserId, myUserId, noteId) {
@@ -804,7 +804,7 @@ func (this *NoteService) CopySharedNote(noteId, notebookId, fromUserId, myUserId
 // 通过noteId得到notebookId
 // shareService call
 // [ok]
-func (this *NoteService) GetNotebookId(noteId string) int64 {
+func (this *NoteService) GetNotebookId(noteId int64) int64 {
 	note := info.Note{}
 	// db.Get(db.Notes, noteId, &note)
 	// LogJ(note)
@@ -814,9 +814,9 @@ func (this *NoteService) GetNotebookId(noteId string) int64 {
 
 //------------------
 // 搜索Note, 博客使用了
-func (this *NoteService) SearchNote(key, userId string, pageNumber, pageSize int, sortField string, isAsc, isBlog bool) (count int, notes []info.Note) {
+func (this *NoteService) SearchNote(key string, userId int64, pageNumber, pageSize int, sortField string, isAsc, isBlog bool) (count int, notes []info.Note) {
 	notes = []info.Note{}
-	skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
+	// skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
 
 	// // 利用标题和desc, 不用content
 	// orQ := []bson.M{
@@ -851,7 +851,7 @@ func (this *NoteService) SearchNote(key, userId string, pageNumber, pageSize int
 }
 
 // 搜索noteContents, 补集pageSize个
-func (this *NoteService) searchNoteFromContent(notes []info.Note, userId, key string, pageSize int, sortField string, isBlog bool) []info.Note {
+func (this *NoteService) searchNoteFromContent(notes []info.Note, userId int64, key string, pageSize int, sortField string, isBlog bool) []info.Note {
 	// var remain = pageSize - len(notes)
 	// noteIds := make([]bson.ObjectId, len(notes))
 	// for i, note := range notes {
@@ -899,7 +899,7 @@ func (this *NoteService) searchNoteFromContent(notes []info.Note, userId, key st
 
 //----------------
 // tag搜索
-func (this *NoteService) SearchNoteByTags(tags []string, userId string, pageNumber, pageSize int, sortField string, isAsc bool) (count int, notes []info.Note) {
+func (this *NoteService) SearchNoteByTags(tags []string, userId int64, pageNumber, pageSize int, sortField string, isAsc bool) (count int, notes []info.Note) {
 	notes = []info.Note{}
 	// skipNum, sortFieldR := parsePageAndSort(pageNumber, pageSize, sortField, isAsc)
 
@@ -923,7 +923,7 @@ func (this *NoteService) SearchNoteByTags(tags []string, userId string, pageNumb
 
 //------------
 // 统计
-func (this *NoteService) CountNote(userId string) int {
+func (this *NoteService) CountNote(userId int64) int {
 	// 	q := bson.M{"IsTrash": false, "IsDeleted": false}
 	// 	if userId != "" {
 	// 		q["UserId"] = bson.ObjectIdHex(userId)
@@ -940,7 +940,7 @@ func (this *NoteService) CountNote(userId string) int {
 }
 
 // 通过标签来查询
-func (this *NoteService) CountNoteByTag(userId string, tag string) int {
+func (this *NoteService) CountNoteByTag(userId int64, tag string) int {
 	// if tag == "" {
 	// 	return 0
 	// }
@@ -954,7 +954,7 @@ func (this *NoteService) CountNoteByTag(userId string, tag string) int {
 
 // 删除tag
 // 返回所有note的Usn
-func (this *NoteService) UpdateNoteToDeleteTag(userId string, targetTag string) map[string]int {
+func (this *NoteService) UpdateNoteToDeleteTag(userId int64, targetTag string) map[string]int {
 	// query := bson.M{"UserId": bson.ObjectIdHex(userId),
 	// 	"Tags": bson.M{"$in": []string{targetTag}}}
 	// notes := []info.Note{}

@@ -343,7 +343,7 @@ func (this *BlogService) notes2BlogItems(notes []info.Note) []info.BlogItem {
 	}
 	return blogs
 }
-func (this *BlogService) SearchBlog(key, userId string, page, pageSize int, sortField string, isAsc bool) (info.Page, []info.BlogItem) {
+func (this *BlogService) SearchBlog(key string, userId int64, page, pageSize int, sortField string, isAsc bool) (info.Page, []info.BlogItem) {
 	count, notes := noteService.SearchNote(key, userId, page, pageSize, sortField, isAsc, true)
 
 	if notes == nil || len(notes) == 0 {
@@ -359,7 +359,7 @@ func (this *BlogService) SearchBlog(key, userId string, page, pageSize int, sort
 // sorterField, baseTime是基准, sorterField=PublicTime, title
 // isAsc是用户自定义的排序方式
 func (this *BlogService) PreNextBlog(userId string, sorterField string, isAsc bool, noteId string, baseTime interface{}) (info.Post, info.Post) {
-	userIdO := userId
+	// userIdO := userId
 
 	// var sortFieldT1, sortFieldT2 bson.M
 	// var sortFieldR1, sortFieldR2 string
@@ -536,7 +536,7 @@ func (this *BlogService) fixUserBlog(userBlog *info.UserBlog) {
 		userBlog.ThemePath = themeService.GetThemePath(userBlog.UserId , userBlog.ThemeId )
 	}*/
 }
-func (this *BlogService) GetUserBlog(userId string) info.UserBlog {
+func (this *BlogService) GetUserBlog(userId int64) info.UserBlog {
 	userBlog := info.UserBlog{}
 	db.Engine.Where("UserId=?", userId).Get(&userBlog)
 	this.fixUserBlog(&userBlog)
@@ -841,7 +841,7 @@ func (this *BlogService) LikeComment(commentId, userId string) (ok bool, isILike
 func (this *BlogService) ListComments(userId, noteId string, page, pageSize int) (info.Page, []info.BlogCommentPublic, map[int64]info.UserAndBlog) {
 	pageInfo := info.Page{CurPage: page}
 
-	comments2 := []info.BlogComment{}
+	// comments2 := []info.BlogComment{}
 
 	// skipNum, sortFieldR := parsePageAndSort(page, pageSize, "CreatedTime", false)
 

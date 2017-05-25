@@ -120,7 +120,7 @@ func (this *ConfigService) updateGlobalConfig(userId int64, key string, value in
 	// 	config.ValueStr = v
 	// 	this.GlobalStringConfigs[key] = v
 	// }
-	affected, err := db.Engine.Insert(&config)
+	_, err := db.Engine.Insert(&config)
 	return err == nil
 	// } //else {
 	//i := bson.M{"UpdatedTime": time.Now()}
@@ -143,7 +143,7 @@ func (this *ConfigService) updateGlobalConfig(userId int64, key string, value in
 	// 	this.GlobalStringConfigs[key] = v
 	// }
 	// return db.UpdateByQMap(db.Configs, bson.M{"UserId": bson.ObjectIdHex(userId), "Key": key}, i)
-	affected, err = db.Engine.Where("Key=?", key).Update(&config)
+	_, err = db.Engine.Where("Key=?", key).Update(&config)
 	return err == nil
 	//}
 }
@@ -340,7 +340,7 @@ func (this *ConfigService) Backup(remark string) (ok bool, msg string) {
 
 	cmd := exec.Command("/bin/sh", "-c", binPath)
 	// Log(binPath)
-	b, err := cmd.Output()
+	_, err = cmd.Output()
 	if err != nil {
 		msg = fmt.Sprintf("%v", err)
 		ok = false
@@ -396,7 +396,7 @@ func (this *ConfigService) Restore(createdTime string) (ok bool, msg string) {
 
 	cmd := exec.Command("/bin/sh", "-c", binPath)
 	// Log(binPath)
-	b, err := cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		msg = fmt.Sprintf("%v", err)
 		ok = false

@@ -6,11 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/go-xorm/core"
 	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
+	"github.com/sddysz/leanote/app/lea"
 )
 
 // init service, for share service bettween services
@@ -121,7 +120,7 @@ func fixUrlTitle(urlTitle string) string {
 	return urlTitle
 }
 
-func getUniqueUrlTitle(userId string, urlTitle string, types string, padding int) string {
+func getUniqueUrlTitle(userId int64, urlTitle string, types string, padding int) string {
 	urlTitle2 := urlTitle
 
 	// 判断urlTitle是不是过长, 过长则截断, 300
@@ -135,30 +134,22 @@ func getUniqueUrlTitle(userId string, urlTitle string, types string, padding int
 	if padding > 1 {
 		urlTitle2 = urlTitle + "-" + strconv.Itoa(padding)
 	}
-	userIdO := bson.ObjectIdHex(userId)
+	userIdO := userId
 
-	user := new(info.User)
-
-	if err != nil {
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err = rows.Scan(user)
-		//...
-	}
+	// user := new(info.User)
 
 	var rows *core.Rows
 	if types == "note" {
 		note := new(info.Note)
-		rows, err := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(note)
+		rows, _ := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(note)
 		defer rows.Close()
 	} else if types == "notebook" {
 		notebook := new(info.Notebook)
-		rows, err := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(notebook)
+		rows, _ := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(notebook)
 		defer rows.Close()
 	} else if types == "single" {
 		blogSingle := new(info.BlogSingle)
-		rows, err := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(blogSingle)
+		rows, _ := db.Engine.Where("UserId =?", userIdO).And("UrlTitle =?", urlTitle2).Rows(blogSingle)
 		defer rows.Close()
 	}
 	for rows.Next() { // 用户下唯一
@@ -172,23 +163,23 @@ func getUniqueUrlTitle(userId string, urlTitle string, types string, padding int
 // 截取id 24位变成12位
 // 先md5, 再取12位
 func subIdHalf(id string) string {
-	idMd5 := Md5(id)
+	idMd5 := lea.Md5(id)
 	return idMd5[:12]
 }
 
 // types == note,notebook,single
 // id noteId, notebookId, singleId 当title没的时候才有用, 用它来替换
-func GetUrTitle(userId int64, title string, types string, id string) string {
+func GetUrTitle(userId int64, title string, types string, id int64) string {
 	urlTitle := strings.Trim(title, " ")
 	if urlTitle == "" {
 		if id == 0 {
-			urlTitle = "Untitled-" + userId
+			urlTitle = "Untitled-" + strconv.FormatInt(userId, 10)
 		} else {
-			urlTitle = subIdHalf(id)
+			urlTitle = subIdHalf(strconv.FormatInt(id, 10))
 		}
 		// 不允许title是ObjectId
-	} else if b, error := strconv.Atoi(title); error == nil {
-		urlTitle = subIdHalf(id)
+	} else if _, error := strconv.Atoi(title); error == nil {
+		urlTitle = subIdHalf(strconv.FormatInt(id, 10))
 	}
 
 	urlTitle = fixUrlTitle(urlTitle)

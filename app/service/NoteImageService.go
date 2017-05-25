@@ -30,7 +30,7 @@ func (this *NoteImageService) GetNoteIds(imageId int64) []int64 {
 // <img src="/file/outputImage?fileId=12323232" />
 // 图片必须是我的, 不然不添加
 // imgSrc 防止博客修改了, 但内容删除了
-func (this *NoteImageService) UpdateNoteImages(userId, noteId, imgSrc, content string) bool {
+func (this *NoteImageService) UpdateNoteImages(userId, noteId int64, imgSrc, content string) bool {
 	// 让主图成为内容的一员
 	// if imgSrc != "" {
 	// 	content = "<img src=\"" + imgSrc + "\" >" + content
@@ -68,7 +68,7 @@ func (this *NoteImageService) UpdateNoteImages(userId, noteId, imgSrc, content s
 }
 
 // 复制图片, 把note的图片都copy给我, 且修改noteContent图片路径
-func (this *NoteImageService) CopyNoteImages(fromNoteId, fromUserId, newNoteId, content, toUserId string) string {
+func (this *NoteImageService) CopyNoteImages(fromNoteId, fromUserId int64, newNoteId int64, content string, toUserId int64) string {
 	/* 弃用之
 	// 得到fromNoteId的noteImages, 如果为空, 则直接返回content
 	noteImages := []info.NoteImage{}

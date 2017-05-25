@@ -83,7 +83,7 @@ func (this *FileService) GetAllImageNamesMap(userId string) (m map[string]bool) 
 
 // delete image
 func (this *FileService) DeleteImage(userId, fileId string) (bool, string) {
-	file := info.File{}
+	// file := info.File{}
 	// db.GetByIdAndUserId(db.Files, fileId, userId, &file)
 
 	// if file.FileId != "" {
@@ -196,12 +196,12 @@ func (this *FileService) GetFile(userId, fileId int64) string {
 		//}
 
 		// 2014/12/28 修复, 如果是分享给用户组, 那就不行, 这里可以实现
-		for _, noteId := range noteIds {
-			note := noteService.GetNoteById(noteId)
-			// if shareService.HasReadPerm(note.UserId, userId, noteId) {
-			// 	return path
-			// }
-		}
+		// for _, noteId := range noteIds {
+		// note := noteService.GetNoteById(noteId)
+		// if shareService.HasReadPerm(note.UserId, userId, noteId) {
+		// 	return path
+		// 	// }
+		// }
 		/*
 			// 若有共享给我的笔记?
 			// 对该笔记可读?

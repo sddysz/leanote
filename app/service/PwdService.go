@@ -17,7 +17,7 @@ type PwdService struct {
 func (this *PwdService) FindPwd(email string) (ok bool, msg string) {
 	ok = false
 	userId := userService.GetUserId(email)
-	if userId == "" {
+	if userId == 0 {
 		msg = "用户不存在"
 		return
 	}

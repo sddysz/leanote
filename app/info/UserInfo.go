@@ -53,7 +53,7 @@ type User struct {
 	MaxPerAttachSize int // 单个附件大小
 
 	// 2015/1/15, 更新序号
-	Usn            int       // UpdateSequenceNum , 全局的
+	Usn            int64     // UpdateSequenceNum , 全局的
 	FullSyncBefore time.Time // 需要全量同步的时间, 如果 > 客户端的LastSyncTime, 则需要全量更新
 }
 

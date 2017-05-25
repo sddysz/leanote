@@ -1,10 +1,11 @@
 package controllers
 
 import (
+	"strings"
+
+	"github.com/revel/revel"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
-	"github.com/revel/revel"
-	"strings"
 	//	"strconv"
 )
 
@@ -114,7 +115,7 @@ func (c Auth) Register(from, iu string) revel.Result {
 	c.ViewArgs["subTitle"] = c.Message("register")
 	return c.RenderTemplate("home/register.html")
 }
-func (c Auth) DoRegister(email, pwd, iu string) revel.Result {
+func (c Auth) DoRegister(email, pwd string, iu int64) revel.Result {
 	if !configService.IsOpenRegister() {
 		return c.Redirect("/index")
 	}

@@ -24,7 +24,7 @@ func (c Album) GetAlbums() revel.Result {
 	re := albumService.GetAlbums(c.GetUserId())
 	return c.RenderJSON(re)
 }
-func (c Album) DeleteAlbum(albumId string) revel.Result {
+func (c Album) DeleteAlbum(albumId int64) revel.Result {
 	re, msg := albumService.DeleteAlbum(c.GetUserId(), albumId)
 	return c.RenderJSON(info.Re{Ok: re, Msg: msg})
 }
@@ -45,6 +45,6 @@ func (c Album) AddAlbum(name string) revel.Result {
 }
 
 // update alnum name
-func (c Album) UpdateAlbum(albumId, name string) revel.Result {
+func (c Album) UpdateAlbum(albumId int64, name string) revel.Result {
 	return c.RenderJSON(albumService.UpdateAlbum(albumId, c.GetUserId(), name))
 }

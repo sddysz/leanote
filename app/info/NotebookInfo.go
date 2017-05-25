@@ -20,8 +20,8 @@ type Notebook struct {
 	UpdatedTime      time.Time `xorm:"updated"`
 
 	// 2015/1/15, 更新序号
-	Usn       int  // UpdateSequenceNum
-	IsDeleted bool `xorm:"deleted"`
+	Usn       int64 // UpdateSequenceNum
+	IsDeleted bool  `xorm:"deleted"`
 }
 
 // 仅仅是为了返回前台

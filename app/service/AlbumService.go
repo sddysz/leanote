@@ -16,12 +16,12 @@ type AlbumService struct {
 func (this *AlbumService) AddAlbum(album info.Album) bool {
 	album.CreatedTime = time.Now()
 	album.Type = IMAGE_TYPE
-	affected, err := db.Engine.Insert(&album)
+	_, err := db.Engine.Insert(&album)
 	return err == nil
 }
 
 // get albums
-func (this *AlbumService) GetAlbums(userId string) []info.Album {
+func (this *AlbumService) GetAlbums(userId int64) []info.Album {
 	albums := []info.Album{}
 	db.Engine.Where("UserId = ?", userId).Find(&albums)
 
@@ -30,20 +30,20 @@ func (this *AlbumService) GetAlbums(userId string) []info.Album {
 
 // delete album
 // presupposition: has no images under this ablum
-func (this *AlbumService) DeleteAlbum(userId, albumId string) (bool, string) {
+func (this *AlbumService) DeleteAlbum(userId, albumId int64) (bool, string) {
 	file := info.File{}
-	total, err := db.Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Count(&file)
+	total, _ := db.Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Count(&file)
 	if total == 0 {
 		album := info.Album{}
-		affected, err := db.Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Delete(album)
+		_, err := db.Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Delete(album)
 		return err == nil, ""
 	}
 	return false, "has images"
 }
 
 // update album name
-func (this *AlbumService) UpdateAlbum(albumId, userId, name string) bool {
+func (this *AlbumService) UpdateAlbum(albumId, userId int64, name string) bool {
 	album := info.Album{}
-	affected, err := db.Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Cols("Name").Update(album)
+	_, err := db.Engine.Where("AlbumId=?", albumId).And("UserId=?", userId).Cols("Name").Update(album)
 	return err == nil
 }

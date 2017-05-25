@@ -25,24 +25,25 @@ func (c *BaseController) Message(message string, args ...interface{}) (value str
 	return i18n.Message(c.Request.Locale, message, args...)
 }
 
-func (c BaseController) GetUserId() string {
+func (c BaseController) GetUserId() int64 {
 	if userId, ok := c.Session["UserId"]; ok {
-		return userId
+		id, _ := strconv.ParseInt(userId, 10, 64)
+		return id
 	}
-	return ""
+	return 0
 }
 
 // 是否已登录
 func (c BaseController) HasLogined() bool {
-	return c.GetUserId() != ""
+	return c.GetUserId() != 0
 }
 
 func (c BaseController) GetObjectUserId() int64 {
 	userId := c.GetUserId()
-	if userId != "" {
+	if userId != 0 {
 		return userId
 	}
-	return ""
+	return 0
 }
 
 func (c BaseController) GetEmail() string {
@@ -62,7 +63,8 @@ func (c BaseController) GetUsername() string {
 // 得到用户信息
 func (c BaseController) GetUserInfo() info.User {
 	if userId, ok := c.Session["UserId"]; ok && userId != "" {
-		return userService.GetUserInfo(userId)
+		id, _ := strconv.ParseInt(userId, 10, 64)
+		return userService.GetUserInfo(id)
 		/*
 			notebookWidth, _ := strconv.Atoi(c.Session["NotebookWidth"])
 			noteListWidth, _ := strconv.Atoi(c.Session["NoteListWidth"])
@@ -92,7 +94,8 @@ func (c BaseController) GetUserInfo() info.User {
 
 func (c BaseController) GetUserAndBlogUrl() info.UserAndBlogUrl {
 	if userId, ok := c.Session["UserId"]; ok && userId != "" {
-		return userService.GetUserAndBlogUrl(userId)
+		id, _ := strconv.ParseInt(userId, 10, 64)
+		return userService.GetUserAndBlogUrl(id)
 	}
 	return info.UserAndBlogUrl{}
 }
@@ -106,8 +109,8 @@ func (c BaseController) GetSession(key string) string {
 	return v
 }
 func (c BaseController) SetSession(userInfo info.User) {
-	if userInfo.UserId != "" {
-		c.Session["UserId"] = userInfo.UserId
+	if userInfo.UserId != 0 {
+		c.Session["UserId"] = strconv.FormatInt(userInfo.UserId, 10)
 		c.Session["Email"] = userInfo.Email
 		c.Session["Username"] = userInfo.Username
 		c.Session["UsernameRaw"] = userInfo.UsernameRaw

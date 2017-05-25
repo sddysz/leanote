@@ -22,7 +22,7 @@ type TrashService struct {
 // 删除note
 // 应该放在回收站里
 // 有trashService
-func (this *TrashService) DeleteNote(noteId, userId string) bool {
+func (this *TrashService) DeleteNote(noteId, userId int64) bool {
 	note := noteService.GetNote(noteId, userId)
 	// 如果是垃圾, 则彻底删除
 	if note.IsTrash {
@@ -35,7 +35,7 @@ func (this *TrashService) DeleteNote(noteId, userId string) bool {
 	// 	if db.UpdateByIdAndUserId(db.Notes, noteId, userId, bson.M{"$set": bson.M{"IsTrash": true, "Usn": userService.IncrUsn(userId)}}) {
 	// 		// recount notebooks' notes number
 	// 		notebookIdO := noteService.GetNotebookId(noteId)
-	// 		notebookId := notebookIdO 
+	// 		notebookId := notebookIdO
 	// 		notebookService.ReCountNotebookNumberNotes(notebookId)
 	// 		return true
 	// 	}
@@ -46,9 +46,9 @@ func (this *TrashService) DeleteNote(noteId, userId string) bool {
 
 // 删除别人共享给我的笔记
 // 先判断我是否有权限, 笔记是否是我创建的
-func (this *TrashService) DeleteSharedNote(noteId, myUserId string) bool {
-	note := noteService.GetNoteById(noteId)
-	userId := note.UserId
+func (this *TrashService) DeleteSharedNote(noteId, myUserId int64) bool {
+	// note := noteService.GetNoteById(noteId)
+	// userId := note.UserId
 	// if shareService.HasUpdatePerm(userId, myUserId, noteId) && note.CreatedUserId  == myUserId {
 	// 	return db.UpdateByIdAndUserId(db.Notes, noteId, userId, bson.M{"$set": bson.M{"IsTrash": true, "Usn": userService.IncrUsn(userId)}})
 	// }
@@ -66,9 +66,9 @@ func (this *TrashService) recoverNote(noteId, notebookId, userId string) bool {
 }
 
 // 删除trash
-func (this *TrashService) DeleteTrash(noteId, userId string) bool {
+func (this *TrashService) DeleteTrash(noteId, userId int64) bool {
 	note := noteService.GetNote(noteId, userId)
-	if note.NoteId == "" {
+	if note.NoteId == 0 {
 		return false
 	}
 	// delete note's attachs
@@ -94,10 +94,10 @@ func (this *TrashService) DeleteTrash(noteId, userId string) bool {
 	return ok
 }
 
-func (this *TrashService) DeleteTrashApi(noteId, userId string, usn int) (bool, string, int) {
+func (this *TrashService) DeleteTrashApi(noteId, userId int64, usn int64) (bool, string, int64) {
 	note := noteService.GetNote(noteId, userId)
 
-	if note.NoteId == "" || note.IsDeleted {
+	if note.NoteId == 0 || note.IsDeleted {
 		return false, "notExists", 0
 	}
 
@@ -129,8 +129,8 @@ func (this *TrashService) DeleteTrashApi(noteId, userId string, usn int) (bool, 
 
 // 列出note, 排序规则, 还有分页
 // CreatedTime, UpdatedTime, title 来排序
-func (this *TrashService) ListNotes(userId string,
+func (this *TrashService) ListNotes(userId int64,
 	pageNumber, pageSize int, sortField string, isAsc bool) (notes []info.Note) {
-	_, notes = noteService.ListNotes(userId, "", true, pageNumber, pageSize, sortField, isAsc, false)
+	_, notes = noteService.ListNotes(userId, 0, true, pageNumber, pageSize, sortField, isAsc, false)
 	return
 }

@@ -17,7 +17,7 @@ func (this *UpgradeService) UpgradeBlog() bool {
 	for _, note := range notes {
 		if note.IsBlog && note.PublicTime.Year() < 100 {
 			//db.UpdateByIdAndUserIdMap2(db.Notes, note.NoteId, note.UserId, bson.M{"PublicTime": note.UpdatedTime, "RecommendTime": note.UpdatedTime})
-			Log(note.NoteId )
+			Log(note.NoteId)
 		}
 	}
 
@@ -32,7 +32,7 @@ func (this *UpgradeService) UpgradeBlog() bool {
 <li>Generate "UrlTitle" for all notebooks</li>
 <li>Generate "UrlTitle" for all singles</li>
 */
-func (this *UpgradeService) UpgradeBetaToBeta2(userId string) (ok bool, msg string) {
+func (this *UpgradeService) UpgradeBetaToBeta2(userId int64) (ok bool, msg string) {
 	if configService.GetGlobalStringConfig("UpgradeBetaToBeta2") != "" {
 		return false, "Leanote have been upgraded"
 	}
@@ -42,7 +42,7 @@ func (this *UpgradeService) UpgradeBetaToBeta2(userId string) (ok bool, msg stri
 	//db.ListByQ(db.UserBlogs, bson.M{}, &userBlogs)
 
 	for _, userBlog := range userBlogs {
-		blogService.AddOrUpdateSingle(userBlog.UserId, "", "About Me", userBlog.AboutMe)
+		blogService.AddOrUpdateSingle(userBlog.UserId, 0, "About Me", userBlog.AboutMe)
 	}
 
 	// 2. 默认主题, 给admin用户
@@ -51,11 +51,11 @@ func (this *UpgradeService) UpgradeBetaToBeta2(userId string) (ok bool, msg stri
 	// 3. UrlTitles
 
 	// 3.1 note
-	notes := []info.Note{}
+	// notes := []info.Note{}
 	//db.ListByQ(db.Notes, bson.M{}, &notes)
 	// for _, note := range notes {
 	// 	data := bson.M{}
-	// 	noteId := note.NoteId 
+	// 	noteId := note.NoteId
 	// 	// PublicTime, RecommendTime = UpdatedTime
 	// 	if note.IsBlog && note.PublicTime.Year() < 100 {
 	// 		data["PublicTime"] = note.UpdatedTime
@@ -69,10 +69,10 @@ func (this *UpgradeService) UpgradeBetaToBeta2(userId string) (ok bool, msg stri
 
 	// 3.2
 	Log("notebook")
-	notebooks := []info.Notebook{}
+	// notebooks := []info.Notebook{}
 	//db.ListByQ(db.Notebooks, bson.M{}, &notebooks)
 	// for _, notebook := range notebooks {
-	// 	notebookId := notebook.NotebookId 
+	// 	notebookId := notebook.NotebookId
 	// 	data := bson.M{}
 	// 	data["UrlTitle"] = GetUrTitle(notebook.UserId , notebook.Title, "notebook", notebookId)
 	// 	db.UpdateByIdAndUserIdMap2(db.Notebooks, notebook.NotebookId, notebook.UserId, data)
@@ -84,7 +84,7 @@ func (this *UpgradeService) UpgradeBetaToBeta2(userId string) (ok bool, msg stri
 		singles := []info.BlogSingle{}
 		db.ListByQ(db.BlogSingles, bson.M{}, &singles)
 		for _, single := range singles {
-			singleId := single.SingleId 
+			singleId := single.SingleId
 			blogService.UpdateSingleUrlTitle(single.UserId , singleId, single.Title)
 			Log(singleId)
 		}
@@ -128,8 +128,8 @@ func (this *UpgradeService) moveTag() {
 }
 
 func (this *UpgradeService) setNotebookUsn() {
-	usnI := 1
-	notebooks := []info.Notebook{}
+	// usnI := 1
+	// notebooks := []info.Notebook{}
 	// db.ListByQWithFields(db.Notebooks, bson.M{}, []string{"UserId"}, &notebooks)
 
 	// for _, notebook := range notebooks {
@@ -139,8 +139,8 @@ func (this *UpgradeService) setNotebookUsn() {
 }
 
 func (this *UpgradeService) setNoteUsn() {
-	usnI := 1
-	notes := []info.Note{}
+	// usnI := 1
+	// notes := []info.Note{}
 	// db.ListByQWithFields(db.Notes, bson.M{}, []string{"UserId"}, &notes)
 
 	// for _, note := range notes {

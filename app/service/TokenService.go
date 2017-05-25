@@ -16,7 +16,11 @@ type TokenService struct {
 
 // 生成token
 func (this *TokenService) NewToken(userId int64, email string, tokenType int) string {
-	token := info.Token{UserId: userId, Token: NewGuidWith(email), CreatedTime: time.Now(), Email: email, Type: tokenType}
+	// token := info.Token{UserId: userId,
+	// 	Token:       lea.NewGuidWith(email),
+	// 	CreatedTime: time.Now(),
+	// 	Email:       email,
+	// 	Type:        tokenType}
 
 	// if db.Upsert(db.Tokens, bson.M{"_id": token.UserId}, token) {
 	// 	return token.Token
@@ -28,7 +32,7 @@ func (this *TokenService) NewToken(userId int64, email string, tokenType int) st
 // 删除token
 func (this *TokenService) DeleteToken(userId int64, tokenType int) bool {
 	token := info.Token{}
-	affected, err := db.Engine.Where("UserId=?", userId).And("Type=?", tokenType).Delete(&token)
+	_, err := db.Engine.Where("UserId=?", userId).And("Type=?", tokenType).Delete(&token)
 	return err == nil
 }
 

@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"strconv"
+
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -425,9 +427,9 @@ func FixUrlTime(t time.Time) time.Time {
 }
 
 // 得到用户的随机文件路径 3位/userId/2位
-func GetRandomFilePath(userId, uuid string) string {
+func GetRandomFilePath(userId int64, uuid string) string {
 	if uuid == "" {
 		uuid = NewGuid()
 	}
-	return Digest3(userId) + "/" + userId + "/" + Digest2(uuid)
+	return Digest3(strconv.FormatInt(userId, 10)) + "/" + strconv.FormatInt(userId, 10) + "/" + Digest2(uuid)
 }

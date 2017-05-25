@@ -6,10 +6,12 @@ import (
 	"html/template"
 	"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/revel/revel"
+	"github.com/sddysz/leanote/app/db"
 	"github.com/sddysz/leanote/app/info"
 	. "github.com/sddysz/leanote/app/lea"
 )
@@ -83,22 +85,26 @@ func (this *ThemeService) getDefaultTheme(style string) info.Theme {
 }
 
 // 用户的主题路径设置
-func (this *ThemeService) getUserThemeBasePath(userId string) string {
-	return revel.BasePath + "/public/upload/" + Digest3(userId) + "/" + userId + "/themes"
+func (this *ThemeService) getUserThemeBasePath(userId int64) string {
+	usrId := strconv.FormatInt(userId, 10)
+	return revel.BasePath + "/public/upload/" + Digest3(usrId) + "/" + usrId + "/themes"
 }
-func (this *ThemeService) getUserThemePath(userId, themeId string) string {
-	return this.getUserThemeBasePath(userId) + "/" + themeId
+func (this *ThemeService) getUserThemePath(userId, themeId int64) string {
+	themeIdStr := strconv.FormatInt(themeId, 10)
+	return this.getUserThemeBasePath(userId) + "/" + themeIdStr
 }
-func (this *ThemeService) getUserThemePath2(userId, themeId string) string {
-	return "public/upload/" + Digest3(userId) + "/" + userId + "/themes/" + themeId
+func (this *ThemeService) getUserThemePath2(userId, themeId int64) string {
+	usrId := strconv.FormatInt(userId, 10)
+	themeIdStr := strconv.FormatInt(themeId, 10)
+	return "public/upload/" + Digest3(usrId) + "/" + usrId + "/themes/" + themeIdStr
 }
 
 // 新建主题
 // 复制默认主题到文件夹下
-func (this *ThemeService) CopyDefaultTheme(userBlog info.UserBlog) (ok bool, themeId string) {
+func (this *ThemeService) CopyDefaultTheme(userBlog info.UserBlog) (ok bool, themeId int64) {
 	// newThemeId := bson.NewObjectId()
-	// themeId = newThemeId 
-	// userId := userBlog.UserId 
+	// themeId = newThemeId
+	// userId := userBlog.UserId
 	// themePath := this.getUserThemePath(userId, themeId)
 	// err := os.MkdirAll(themePath, 0755)
 	// if err != nil {
@@ -121,23 +127,23 @@ func (this *ThemeService) CopyDefaultTheme(userBlog info.UserBlog) (ok bool, the
 
 	// ok = db.Insert(db.Themes, theme)
 	// return ok, themeId
-	return true, ""
+	return true, 0
 }
 
 // 第一次新建主题
 // 设为active true
-func (this *ThemeService) NewThemeForFirst(userBlog info.UserBlog) (ok bool, themeId string) {
+func (this *ThemeService) NewThemeForFirst(userBlog info.UserBlog) (ok bool, themeId int64) {
 	ok, themeId = this.CopyDefaultTheme(userBlog)
-	this.ActiveTheme(userBlog.UserId , themeId)
+	this.ActiveTheme(userBlog.UserId, themeId)
 	// db.UpdateByQField(db.Themes, bson.M{"_id": bson.ObjectIdHex(themeId)}, "IsActive", true)
 	return
 }
 
 // 新建主题, 判断是否有主题了
-func (this *ThemeService) NewTheme(userId string) (ok bool, themeId string) {
+func (this *ThemeService) NewTheme(userId int64) (ok bool, themeId int64) {
 	userBlog := blogService.GetUserBlog(userId)
 	// 如果还没有主题, 那先复制旧的主题
-	if userBlog.ThemeId == "" {
+	if userBlog.ThemeId == 0 {
 		themeService.NewThemeForFirst(userBlog)
 	}
 	// 再copy一个默认主题
@@ -367,7 +373,7 @@ func (this *ThemeService) mustTpl(filename, content string) (ok bool, msg string
 /////////
 
 // 使用主题
-func (this *ThemeService) ActiveTheme(userId, themeId string) (ok bool) {
+func (this *ThemeService) ActiveTheme(userId, themeId int64) (ok bool) {
 	// if db.Has(db.Themes, bson.M{"_id": bson.ObjectIdHex(themeId), "UserId": bson.ObjectIdHex(userId)}) {
 	// 	// 之前的设为false
 	// 	db.UpdateByQField(db.Themes, bson.M{"UserId": bson.ObjectIdHex(userId), "IsActive": true}, "IsActive", false)
@@ -382,13 +388,13 @@ func (this *ThemeService) ActiveTheme(userId, themeId string) (ok bool) {
 }
 
 // 删除主题
-func (this *ThemeService) DeleteTheme(userId, themeId string) (ok bool) {
+func (this *ThemeService) DeleteTheme(userId, themeId int64) (ok bool) {
 	//return db.Delete(db.Themes, bson.M{"_id": bson.ObjectIdHex(themeId), "UserId": bson.ObjectIdHex(userId), "IsActive": false})
 	return false
 }
 
 // 公开主题, 只有管理员才有权限, 之前没公开的变成公开
-func (this *ThemeService) PublicTheme(userId, themeId string) (ok bool) {
+func (this *ThemeService) PublicTheme(userId, themeId int64) (ok bool) {
 	// 是否是管理员?
 	// userInfo := userService.GetUserInfo(userId)
 	// if userInfo.Username == configService.GetAdminUsername() {
@@ -399,7 +405,7 @@ func (this *ThemeService) PublicTheme(userId, themeId string) (ok bool) {
 }
 
 // 导出主题
-func (this *ThemeService) ExportTheme(userId, themeId string) (ok bool, path string) {
+func (this *ThemeService) ExportTheme(userId, themeId int64) (ok bool, path string) {
 	// theme := this.GetThemeById(themeId)
 	// // 打包
 	// // 验证路径, 别把整个项目打包了
@@ -431,9 +437,9 @@ func (this *ThemeService) ExportTheme(userId, themeId string) (ok bool, path str
 
 // 导入主题
 // path == /llllllll/..../public/upload/.../aa.zip, 绝对路径
-func (this *ThemeService) ImportTheme(userId, path string) (ok bool, msg string) {
+func (this *ThemeService) ImportTheme(userId int64, path string) (ok bool, msg string) {
 	// themeIdO := bson.NewObjectId()
-	// themeId := themeIdO 
+	// themeId := themeIdO
 	// targetPath := this.getUserThemePath(userId, themeId) // revel.BasePath + "/public/upload/" + userId + "/themes/" + themeId
 
 	// err := os.MkdirAll(targetPath, 0755)
@@ -485,7 +491,7 @@ func (this *ThemeService) UpgradeThemeBeta2() (ok bool) {
 	this.upgradeThemeBeta2(adminUserId, fixedStyle, false)
 	return true
 }
-func (this *ThemeService) upgradeThemeBeta2(userId, style string, isActive bool) (ok bool) {
+func (this *ThemeService) upgradeThemeBeta2(userId int64, style string, isActive bool) (ok bool) {
 	// 解压成功, 那么新建之
 	// 保存到数据库中
 	targetPath := this.GetDefaultThemePath(style)
@@ -501,7 +507,7 @@ func (this *ThemeService) upgradeThemeBeta2(userId, style string, isActive bool)
 	theme.IsActive = isActive
 	theme.IsDefault = true
 	theme.Style = style
-	affected, err := db.Engine.Insert(&theme)
+	_, err := db.Engine.Insert(&theme)
 	return err == nil
 }
 
@@ -522,7 +528,7 @@ func (this *ThemeService) InstallTheme(userId, themeId string) (ok bool) {
 
 	// // 生成新主题
 	// newThemeId := bson.NewObjectId()
-	// themeId = newThemeId 
+	// themeId = newThemeId
 	// themePath := this.getUserThemePath(userId, themeId)
 	// err := os.MkdirAll(themePath, 0755)
 	// if err != nil {

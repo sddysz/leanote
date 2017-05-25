@@ -19,7 +19,7 @@ type AttachService struct {
 // fromApi表示是api添加的, updateNote传过来的, 此时不要incNote's usn, 因为updateNote会inc的
 func (this *AttachService) AddAttach(attach info.Attach, fromApi bool) (ok bool, msg string) {
 
-	affected, err := db.Engine.Insert(attach)
+	_, err := db.Engine.Insert(attach)
 	ok = err == nil
 	note := noteService.GetNoteById(attach.NoteId)
 
@@ -58,7 +58,7 @@ func (this *AttachService) updateNoteAttachNum(noteId int64, addNum int) bool {
 	*/
 	note := info.Note{}
 	note.AttachNum = num
-	affected, err := db.Engine.Id(noteId).Cols("AttachNum").Update(note)
+	_, err = db.Engine.Id(noteId).Cols("AttachNum").Update(&note)
 	return err == nil
 }
 
@@ -102,7 +102,7 @@ func (this *AttachService) getAttachsByNoteIds(noteIds []int64) map[int64][]info
 func (this *AttachService) UpdateImageTitle(userId, fileId, title string) bool {
 	attach := info.Attach{}
 	attach.Title = title
-	affected, err := db.Engine.Where("UserId=?", userId).And("FileId=?", fileId).Cols("Title").Update(&attach)
+	_, err := db.Engine.Where("UserId=?", userId).And("FileId=?", fileId).Cols("Title").Update(&attach)
 	return err == nil
 }
 
@@ -135,7 +135,7 @@ func (this *AttachService) DeleteAttach(attachId, userId int64) (bool, string) {
 		// 	return false, "No Perm"
 		// }
 
-		if affected, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
+		if _, err := db.Engine.Id(attachId).Delete(&attach); err == nil {
 			this.updateNoteAttachNum(attach.NoteId, -1)
 			attach.Path = strings.TrimLeft(attach.Path, "/")
 			err := os.Remove(revel.BasePath + "/" + attach.Path)
